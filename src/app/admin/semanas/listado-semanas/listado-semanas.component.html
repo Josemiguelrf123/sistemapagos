@@ -1,0 +1,254 @@
+<section class="content">
+  <div class="content-block">
+    <div class="block-header">
+      <!-- breadcrumb -->
+      <app-breadcrumb [title]="'Semanas'" [active_item]="'Listado de semanas'"></app-breadcrumb>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <mat-tab-group (selectedTabChange)="onTabChanged($event)">
+            @for (semana of semanas; track semana; let i = $index) {
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <mat-icon class="example-tab-icon msr-2">assignment</mat-icon>
+                {{semana}}
+              </ng-template>
+            </mat-tab>
+            }
+          </mat-tab-group>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="materialTableHeader responsive-header-container p-2">
+            <div class="left">
+              <ul class="header-buttons-left d-flex flex-wrap align-items-center gap-2 m-0">
+                <li class="tbl-title">
+                  <h2 class="h5 m-0">Trabajos {{semanaSelect}}</h2>
+                </li>
+                <li class="tbl-search-box flex-grow-1">
+                  <input placeholder="Buscar por No. contrato, consultorio, material, trabajo" type="text" #filter
+                    class="browser-default search-field w-100" aria-label="Search box"
+                    (keyup)="filterDatatable($event)" />
+                </li>
+              </ul>
+            </div>
+
+            <div class="right mt-2 mt-md-0">
+              <ul class="tbl-export-btn d-flex align-items-center gap-2">
+                <li class="tbl-header-btn">
+                  <div class="m-l-10" matTooltip="ADD">
+                    <button matTooltip="Agregar nuevo expediente" mat-mini-fab color="primary" (click)="iraNuevo()">
+                      <mat-icon class="col-white">add</mat-icon>
+                    </button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="column-toggle-button d-none d-md-inline-block">
+            <button mat-button [matMenuTriggerFor]="columnsMenu">
+              <mat-icon>view_column</mat-icon>
+              Selecciona qué columnas quieres mostrar
+            </button>
+          </div>
+
+          <mat-menu #columnsMenu="matMenu">
+            @for (column of availableColumns; track column) {
+            <button mat-menu-item (click)="toggleColumn(column)">
+              <mat-icon>
+                {{ displayedColumns.includes(column) ? 'check_box' : 'check_box_outline_blank' }}
+              </mat-icon>
+              {{ column | titlecase }}
+            </button>
+            }
+          </mat-menu>
+          <div class="table-container">
+            <div class="responsive-table-wrapper">
+              @if (dataObs$ | async; as trabajos) {
+              <table mat-table [dataSource]="trabajos" matSort class="compact-table">
+                <!-- ID Column -->
+                <ng-container matColumnDef="id">
+                  <mat-header-cell *matHeaderCellDef mat-sort-header>Id</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{row.id}}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="noContrato">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>No. Contrato</th>
+                  <td mat-cell *matCellDef="let row">{{row.noContrato}}</td>
+                </ng-container>
+                <ng-container matColumnDef="trabajo">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Trabajo</th>
+                  <td mat-cell *matCellDef="let row">{{row.trabajo}}</td>
+                </ng-container>
+                <ng-container matColumnDef="consultorio">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Consultorio</th>
+                  <td mat-cell *matCellDef="let row">{{row.consultorio}}</td>
+                </ng-container>
+                <ng-container matColumnDef="tono">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Tono</th>
+                  <td mat-cell *matCellDef="let row">{{row.tono}}</td>
+                </ng-container>
+                <ng-container matColumnDef="material">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Material</th>
+                  <td mat-cell *matCellDef="let row">{{row.material}}</td>
+                </ng-container>
+                <ng-container matColumnDef="fechaRegistro">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Registro</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{row.fechaRegistro ? (row.fechaRegistro.seconds
+                    * 1000 | date: 'mediumDate'): ''}}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="fechaEntrega">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Entrega</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{row.fechaEntrega ? (row.fechaEntrega.seconds
+                    * 1000 | date: 'mediumDate'): ''}}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="pruebaTerminada">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Prueba o Terminada</th>
+                  <td mat-cell *matCellDef="let row">{{row.pruebaTerminada}}</td>
+                </ng-container>
+                <ng-container matColumnDef="urgente">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Urgente</th>
+                  <td mat-cell *matCellDef="let row">{{row.urgente}}</td>
+                </ng-container>
+                <ng-container matColumnDef="placabase">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Placa Base</th>
+                  <td mat-cell *matCellDef="let row">{{row.placaBase}}</td>
+                </ng-container>
+                <ng-container matColumnDef="total">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Total</th>
+                  <td mat-cell *matCellDef="let row">
+                    ${{(+row?.precio).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2})}}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="totalcobrar">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Total por cobrar</th>
+                  <td mat-cell *matCellDef="let row">
+                    ${{(+row?.totalPorCobrar).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2})}}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="observaciones">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Observaciones</th>
+                  <td mat-cell *matCellDef="let row">{{row.observaciones}}</td>
+                </ng-container>
+                <!-- actions -->
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef class="sticky-col right-col">Acciones</th>
+                  <td mat-cell *matCellDef="let row" class="sticky-col right-col">
+                    <button mat-icon-button (click)="iraEditar(row.id)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="eliminarExpediente(row)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <!-- <mat-row *matRowDef="let row; columns: displayedColumns;"
+                  [ngClass]="{'fila-verde': row.pagado === 'SI'}" matRipple>
+                </mat-row> -->
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                  [ngClass]="{'fila-verde': row.pagado === 'SI'}">
+                </tr>
+              </table>
+              }
+
+              <!-- Loading spinner -->
+              @if (!pagos) {
+              <div class="tbl-spinner">
+                <mat-progress-spinner color="primary" [diameter]="40" mode="indeterminate">
+                </mat-progress-spinner>
+              </div>
+              }
+              @if (pagos.length === 0) {
+              <div class="no-results">
+                No hay resultados
+              </div>
+              }
+              <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]"></mat-paginator>
+            </div>
+          </div>
+          <div class="mobile-cards">
+            @for (pago of pagos; track pago.id) {
+            <mat-card class="user-card" [ngClass]="{'fila-verde': pago.pagado === 'SI'}">
+              <mat-card-header>
+                <mat-card-title>{{pago.noContrato}}</mat-card-title>
+                <mat-card-subtitle>{{pago.trabajo}}</mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                <div class="card-row">
+                  <span>Consultorio:</span>
+                  <span>{{pago.consultorio}}</span>
+                </div>
+                <div class="card-row">
+                  <span>Tono:</span>
+                  <span>{{pago.tono}}</span>
+                </div>
+                <div class="card-row">
+                  <span>Material:</span>
+                  <span>{{pago.material}}</span>
+                </div>
+                <div class="card-row">
+                  <span>Fecha Registro:</span>
+                  <span> {{pago.fechaRegistro ? (pago.fechaRegistro.seconds
+                    * 1000 | date: 'mediumDate'): ''}}</span>
+                </div>
+                <div class="card-row">
+                  <span>Fecha Entrega:</span>
+                  <span> {{pago.fechaEntrega ? (pago.fechaEntrega.seconds
+                    * 1000 | date: 'mediumDate'): ''}}</span>
+                </div>
+                <div class="card-row">
+                  <span>Prueba o Terminada:</span>
+                  <span>{{pago.pruebaTerminada}}</span>
+                </div>
+                <div class="card-row">
+                  <span>Urgente:</span>
+                  <span>{{pago.urgente}}</span>
+                </div>
+                <div class="card-row">
+                  <span>Placa Base:</span>
+                  <span>{{pago.placaBase}}</span>
+                </div>
+                <div class="card-row">
+                  <span>Total:</span>
+                  <span> ${{(+pago.precio).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2})}}</span>
+                </div>
+                <div class="card-row">
+                  <span>Total por cobrar:</span>
+                  <span> ${{(+pago.totalPorCobrar).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2})}}</span>
+                </div>
+                <div class="card-row">
+                  <span>Observaciones:</span>
+                  <span>{{pago.observaciones}}</span>
+                </div>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-icon-button (click)="iraEditar(pago.id)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="eliminarExpediente(pago)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-card-actions>
+            </mat-card>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkpagos=self.webpackChunkpagos||[]).push([[534],{9534:(t,s,n)=>{n.r(s),n.d(s,{ADMIN_ROUTE:()=>h});var a=n(8496);const h=[{path:"semanas",loadChildren:()=>Promise.all([n.e(642),n.e(750)]).then(n.bind(n,5750)).then(o=>o.ATRIBUTOS_ROUTE),...(0,a.nW)(()=>(0,a.ik)([""]))}]}}]);

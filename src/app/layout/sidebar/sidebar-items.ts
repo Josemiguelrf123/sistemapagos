@@ -1,0 +1,54 @@
+import { RouteInfo } from './sidebar.metadata';
+export const ROUTES: RouteInfo[] = [
+  {
+    path: '',
+    title: 'MENUITEMS.MAIN.TEXT',
+    iconType: '',
+    icon: '',
+    class: '',
+    groupTitle: true,
+    badge: '',
+    badgeClass: '',
+    role: ['All'],
+    submenu: [],
+  },
+
+  // Admin Modules
+  {
+    path: '',
+    title: 'Semanas',
+    iconType: 'material-icons-outlined',
+    icon: 'format_list_bulleted',
+    class: 'menu-toggle',
+    groupTitle: false,
+    badge: '',
+    badgeClass: '',
+    role: ['Admin'],
+    submenu: [
+      {
+        path: '/admin/semanas/nuevo-trabajo/agregar',
+        title: 'Nuevo trabajo',
+        iconType: '',
+        icon: '',
+        class: 'ml-menu',
+        groupTitle: false,
+        badge: '',
+        badgeClass: '',
+        role: [''],
+        submenu: [],
+      },
+      {
+        path: '/admin/semanas/listado-semanas',
+        title: 'Semanas',
+        iconType: '',
+        icon: '',
+        class: 'ml-menu',
+        groupTitle: false,
+        badge: '',
+        badgeClass: '',
+        role: [''],
+        submenu: [],
+      },
+    ],
+  }
+];

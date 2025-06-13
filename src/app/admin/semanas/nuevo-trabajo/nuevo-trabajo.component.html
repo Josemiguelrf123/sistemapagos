@@ -1,0 +1,199 @@
+<section class="content">
+  <div class="content-block">
+    <div class="block-header">
+      <!-- breadcrumb -->
+      <app-breadcrumb [title]="'Nuevo trabajo'" [items]="['Listado de trabajos']"
+        [active_item]="'Nuevo trabajo'"></app-breadcrumb>
+    </div>
+    <div class="row clearfix">
+      <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
+        <div class="card">
+          <div class="body">
+            @if (pago){
+            <form class="register-form" [formGroup]="pagosForm" (ngSubmit)="onSubmit()">
+              <div class="row">
+                <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Semana</mat-label>
+                    <input matInput formControlName="semana" [matAutocomplete]="autoProvSemana"
+                      (input)="_filterProvMateriales($any($event.target).value)">
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>calendar_today</mat-icon>
+                    <mat-autocomplete autoActiveFirstOption #autoProvSemana="matAutocomplete">
+                      @for (semana of semanasFilter; track semana) {
+                      <mat-option [value]="semana">{{ semana }}</mat-option>
+                      }
+                    </mat-autocomplete>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>N° de contrato</mat-label>
+                    <input matInput formControlName="noContrato" type="text">
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>description</mat-icon>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Trabajo</mat-label>
+                    <input matInput formControlName="trabajo" [matAutocomplete]="autoProvTrabajo"
+                      (input)="_filterProvTrabajos($any($event.target).value)">
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>work</mat-icon>
+                    <mat-autocomplete autoActiveFirstOption #autoProvTrabajo="matAutocomplete">
+                      @for (trabajo of trabajosFilter; track trabajo) {
+                      <mat-option [value]="trabajo">{{ trabajo }}</mat-option>
+                      }
+                    </mat-autocomplete>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Consultorio</mat-label>
+                    <input matInput formControlName="consultorio" [matAutocomplete]="autoProvConsultorio"
+                      (input)="_filterProvConsultorios($any($event.target).value)">
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>local_hospital</mat-icon>
+                    <mat-autocomplete autoActiveFirstOption #autoProvConsultorio="matAutocomplete">
+                      @for (consultorio of consultoriosFilter; track consultorio) {
+                      <mat-option [value]="consultorio">{{ consultorio }}</mat-option>
+                      }
+                    </mat-autocomplete>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Tono</mat-label>
+                    <input matInput formControlName="tono" [matAutocomplete]="autoProvTonos"
+                      (input)="_filterProvTonos($any($event.target).value)">
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>palette</mat-icon>
+                    <mat-autocomplete autoActiveFirstOption #autoProvTonos="matAutocomplete">
+                      @for (tono of tonosFilter; track tono) {
+                      <mat-option [value]="tono">{{ tono }}</mat-option>
+                      }
+                    </mat-autocomplete>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Material</mat-label>
+                    <input matInput formControlName="material" [matAutocomplete]="autoProvMaterial"
+                      (input)="_filterProvMateriales($any($event.target).value)">
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>category</mat-icon>
+                    <mat-autocomplete autoActiveFirstOption #autoProvMaterial="matAutocomplete">
+                      @for (material of materialesFilter; track material) {
+                      <mat-option [value]="material">{{ material }}</mat-option>
+                      }
+                    </mat-autocomplete>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Fecha de Registro</mat-label>
+                    <input matInput [matDatepicker]="pickerFR" formControlName="fechaRegistro">
+                    <mat-datepicker-toggle matIconSuffix [for]="pickerFR"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerFR></mat-datepicker>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Fecha de Entrega</mat-label>
+                    <input matInput [matDatepicker]="pickerEN" formControlName="fechaEntrega">
+                    <mat-datepicker-toggle matIconSuffix [for]="pickerEN"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerEN></mat-datepicker>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Prueba o Terminada</mat-label>
+                    <mat-select formControlName="pruebaTerminada">
+                      <mat-option value="prueba">Prueba</mat-option>
+                      <mat-option value="terminada">Terminada</mat-option>
+                    </mat-select>
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>check</mat-icon>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Urgente</mat-label>
+                    <mat-select formControlName="urgente">
+                      <mat-option value="SI">SI</mat-option>
+                      <mat-option value="NO">No</mat-option>
+                    </mat-select>
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>priority_high</mat-icon>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Placa base</mat-label>
+                    <mat-select formControlName="placaBase">
+                      <mat-option value="SI">SI</mat-option>
+                      <mat-option value="NO">No</mat-option>
+                    </mat-select>
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>build</mat-icon>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Precio Total</mat-label>
+                    <input matInput formControlName="precio" type="number" (wheel)="preventScroll($event)">
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>monetization_on</mat-icon>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Precio por cobrar</mat-label>
+                    <input matInput formControlName="totalPorCobrar" type="number" (wheel)="preventScroll($event)">
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>monetization_on</mat-icon>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Observaciones</mat-label>
+                    <input matInput formControlName="observaciones" type="text">
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>comment</mat-icon>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Pagado</mat-label>
+                    <mat-select formControlName="pagado">
+                      <mat-option value="SI">SI</mat-option>
+                      <mat-option value="No">No</mat-option>
+                    </mat-select>
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>check</mat-icon>
+                  </mat-form-field>
+                </div>
+              </div>
+              @if (!edit){
+              <div class="row">
+                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-2 text-center">
+                  <div class="example-button-row">
+                    <button type="submit" mat-raised-button color="primary"
+                      [disabled]="!pagosForm.valid">Guardar</button>
+                  </div>
+                </div>
+              </div>
+              }
+              @if (edit){
+              <div class="row">
+                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-2 text-center">
+                  <div class="example-button-row">
+                    <button type="submit" mat-raised-button color="primary">Modificar información</button>
+                  </div>
+                </div>
+              </div>
+              }
+            </form>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

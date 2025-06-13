@@ -1,0 +1,181 @@
+.fila-verde {
+  background-color: #e8f5e9 !important;
+  /* Verde claro */
+
+  &:hover {
+    background-color: #c8e6c9 !important;
+    /* Verde un poco más oscuro al hacer hover */
+  }
+}
+
+mat-row {
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+}
+
+/* Contenedor principal */
+.table-container {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Wrapper para el scroll horizontal */
+.responsive-table-wrapper {
+  overflow-x: auto;
+  max-height: 70vh;
+}
+
+/* Estilos compactos para la tabla */
+.compact-table {
+  width: 100%;
+  min-width: 900px;
+  /* Ancho mínimo para evitar compresión */
+}
+
+.compact-table th {
+  background-color: #f5f5f5;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  font-weight: 500;
+}
+
+.compact-table td,
+.compact-table th {
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+/* Columnas pegajosas */
+.sticky-col {
+  position: sticky;
+  background: white;
+  z-index: 1;
+}
+
+.right-col {
+  right: 0;
+  box-shadow: -2px 0 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Efecto hover para filas */
+.compact-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* Paginador estilizado */
+mat-paginator {
+  background: transparent;
+  margin-top: 16px;
+}
+
+.mobile-cards .fila-verde {
+  border-left: 4px solid #4caf50;
+  background-color: #e8f5e9;
+}
+
+.responsive-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tbl-title h2 {
+  font-size: 1.2rem;
+}
+
+.materialTableHeader.responsive-header-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .left,
+  .right {
+    width: 100%;
+  }
+
+  .tbl-title {
+    min-width: 150px;
+  }
+
+  .tbl-search-box {
+    flex-grow: 1;
+
+    input.search-field {
+      max-width: 100%;
+    }
+  }
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    .left,
+    .right {
+      width: auto;
+    }
+
+    .tbl-search-box input.search-field {
+      max-width: 450px;
+    }
+  }
+}
+
+/* Pantallas medianas (tablets) */
+@media (min-width: 600px) {
+  .responsive-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .tbl-title h2 {
+    font-size: 1.5rem;
+  }
+
+  .tbl-search-box input {
+    width: 100%;
+    max-width: 450px;
+  }
+}
+
+/* Pantallas grandes (laptops/desktops) */
+@media (min-width: 992px) {
+  .tbl-search-box input {
+    width: 450px;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .table-container {
+    display: none;
+  }
+
+  .mobile-cards {
+    display: block;
+  }
+
+  .user-card {
+    margin-bottom: 16px;
+  }
+
+  .card-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-cards {
+    display: none;
+  }
+}
