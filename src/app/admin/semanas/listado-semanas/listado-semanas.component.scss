@@ -8,6 +8,18 @@
   }
 }
 
+.mat-icon-button {
+  &.mat-accent {
+    color: #d32f2f;
+    /* Rojo para PDF */
+  }
+
+  &.mat-primary {
+    color: #25D366;
+    /* Verde de WhatsApp */
+  }
+}
+
 .text-purple {
   color: #80188bb3;
 }

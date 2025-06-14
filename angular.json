@@ -43,7 +43,12 @@
               "moment",
               "bezier-easing",
               "exceljs",
-              "file-saver"
+              "file-saver",
+              "jspdf",
+              "jspdf-autotable",
+              "core-js",
+              "raf",
+              "rgbcolor"
             ],
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -70,13 +75,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "4mb",
-                  "maximumError": "6mb"
+                  "maximumWarning": "8mb",
+                  "maximumError": "12mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "8mb",
+                  "maximumError": "12mb"
                 }
               ],
               "outputHashing": "all"

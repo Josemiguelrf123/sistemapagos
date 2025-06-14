@@ -21,7 +21,15 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { FeatherIconsComponent } from '@shared/components/feather-icons/feather-icons.component';
 
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
 @Component({
   selector: 'app-listado-semanas',
   templateUrl: './listado-semanas.component.html',
@@ -44,7 +52,8 @@ import { MatInputModule } from '@angular/material/input';
     MatMenuModule,
     MatCardModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    FeatherIconsComponent
   ],
 })
 export class ListadoSemanasComponent implements OnDestroy {
@@ -279,6 +288,110 @@ export class ListadoSemanasComponent implements OnDestroy {
     this.mostrarModal = true;
     this.selectedItem = item;
     this.selectedItem1 = item1;
+  }
+
+
+  // En tu componente
+  generatePDF() {
+    const pagosFilter = this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0)
+    const doc = new jsPDF();
+
+    // Configuración del documento
+    doc.setFont('helvetica');
+    doc.setFontSize(18);
+    doc.setTextColor(40, 40, 40);
+    doc.text('Reporte de Trabajos', 105, 15, { align: 'center' });
+
+    // Datos para la tabla
+    const headers = [
+      ['No. Contrato', 'Consultorio', 'Trabajo', 'Total a Cobrar']
+    ];
+
+    const body = pagosFilter.map(pago => [
+      pago.noContrato || 'N/A',
+      pago.consultorio || 'N/A',
+      pago.trabajo || 'N/A',
+      `$${(+pago.totalPorCobrar).toLocaleString('es-MX', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`
+    ]);
+
+    // Agregar tabla
+    autoTable(doc, {
+      head: headers,
+      body: body,
+      startY: 25,
+      margin: { top: 20 },
+      styles: {
+        font: 'helvetica',
+        fontSize: 10,
+        cellPadding: 4,
+        valign: 'middle',
+        halign: 'left'
+      },
+      headStyles: {
+        fillColor: [128, 0, 128],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      bodyStyles: {
+        textColor: [40, 40, 40]
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      },
+      columnStyles: {
+        0: { cellWidth: 25, halign: 'center' },
+        1: { cellWidth: 35 },
+        2: { cellWidth: 'auto' },
+        3: { cellWidth: 30, halign: 'right' }
+      }
+    });
+
+    // Pie de página
+    const total = pagosFilter.reduce((sum, pago) => sum + (+pago.totalPorCobrar || 0), 0);
+    doc.setFontSize(12); // Aumentar el tamaño de fuente (de 10 a 12)
+    doc.setFont('helvetica', 'bold'); // Establecer fuente en negrita
+    doc.text(
+      `TOTAL GENERAL: $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`,
+      14,
+      (doc as any).lastAutoTable.finalY + 10
+    );
+
+    // Guardar PDF
+    doc.save(`reporte_trabajos_${new Date().toISOString().slice(0, 10)}.pdf`);
+  }
+
+  shareViaWhatsApp() {
+    // Crear el texto para compartir
+    const pagosFilter = this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0)
+    let shareText = '📋 *Reporte de Trabajos* 📋\n\n';
+    shareText += `📅 Generado el: ${new Date().toLocaleDateString()}\n\n`;
+    shareText += '--------------------------------\n\n';
+    // Agregar cada trabajo al texto
+    pagosFilter.forEach((pago, index) => {
+      shareText += `*No. Contrato*: ${pago.noContrato || 'N/A'}\n`;
+      shareText += `*Consultorio*: ${pago.consultorio || 'N/A'}\n`;
+      shareText += `*Trabajo*: ${pago.trabajo || 'N/A'}\n`;
+      shareText += `*Total a Cobrar*: $${(+pago.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n`;
+
+      if (index < pagosFilter.length - 1) {
+        shareText += '--------------------------------\n\n';
+      }
+    });
+
+    // Total general
+    const totalGeneral = pagosFilter.reduce((sum, pago) => sum + (+pago.totalPorCobrar || 0), 0);
+    shareText += '\n--------------------------------\n';
+    shareText += `*TOTAL GENERAL*: $${totalGeneral.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n`;
+
+    // Codificar el texto para URL de WhatsApp
+    const encodedText = encodeURIComponent(shareText);
+
+    // Abrir WhatsApp con el texto
+    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
   }
 
 }

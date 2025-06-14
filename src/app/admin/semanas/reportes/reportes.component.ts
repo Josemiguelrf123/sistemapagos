@@ -24,6 +24,14 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
 
 @Component({
   selector: 'app-reportes',
@@ -310,82 +318,6 @@ export class ReportesComponent implements OnDestroy {
     this.dataObs$ = this.dataSource.connect();
   }
 
-  iraNuevo() {
-    this.router.navigate(['/admin/semanas/nuevo-trabajo/agregar']);
-  }
-
-  dynamicExcel(row: any) {
-    row.totalPuntos = row.puntos.length;
-    row.noRealizado = row.puntos.reduce(
-      (sum: any, value: any) => sum + Number(value.estatus === ''),
-      0
-    );
-    row.siRealizado = row.puntos.reduce(
-      (sum: any, value: any) => sum + Number(value.estatus !== ''),
-      0
-    );
-    row.totalIntegrado = row.puntos.reduce(
-      (sum: any, value: any) =>
-        sum + Number(value.estatus === 'DOCUMENTO INTEGRADO'),
-      0
-    );
-    row.totalNoIntegrado = row.puntos.reduce(
-      (sum: any, value: any) =>
-        sum + Number(value.estatus === 'DOCUMENTO NO INTEGRADO'),
-      0
-    );
-    row.totalIncumplimiento = row.puntos.reduce(
-      (sum: any, value: any) =>
-        sum + Number(value.estatus === 'DOCUMENTO CON INCUMPLIMIENTO'),
-      0
-    );
-    row.totalNA = row.puntos.reduce(
-      (sum: any, value: any) =>
-        sum + Number(value.estatus === 'DOCUMENTO NO APLICABLE'),
-      0
-    );
-    row.totalNAT = row.puntos.reduce(
-      (sum: any, value: any) =>
-        sum +
-        Number(
-          value.estatus ===
-          'DOCUMENTO INAPLICABLE POR ESTAR EN TIEMPO DE INTEGRACIÓN'
-        ),
-      0
-    );
-
-    row.totalRealizados =
-      row.totalIntegrado +
-      row.totalNoIntegrado +
-      row.totalIncumplimiento +
-      row.totalNA +
-      row.totalNAT;
-    row.porcentajeTotal =
-      (row.totalIntegrado * 100) / (row.puntos.length - row.totalNA);
-    for (let i = 0; i < row.puntos.length; i++) {
-      row.puntos[i].bullet1 = '';
-      if (row.puntos[i].puntos.length > 0) {
-        let stringArray = '';
-        for (let j = 0; j < row.puntos[i].puntos.length; j++) {
-          stringArray += `${j + 1}.-${row.puntos[i].puntos[j]}\n`;
-        }
-        row.puntos[i].bullet1 =
-          row.puntos[i].bullet +
-          '\n' +
-          'Listado de puntos' +
-          '\n' +
-          stringArray;
-      } else {
-        row.puntos[i].bullet1 = row.puntos[i].bullet;
-      }
-    }
-    if (row.tipoContrato === 'Adquisición') {
-      this.excelService.generateExcelA(row);
-    } else {
-      this.excelService.generateExcelO(row);
-    }
-  }
-
   toggleColumn(column: string) {
     const index = this.displayedColumns.indexOf(column);
     if (index > -1) {
@@ -393,6 +325,112 @@ export class ReportesComponent implements OnDestroy {
     } else {
       this.displayedColumns.splice(-1, 0, column); // Inserta antes de acciones
     }
+  }
+
+  // En tu componente
+  generatePDF() {
+    const pagosFilter = this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0)
+    const doc = new jsPDF();
+
+    // Configuración del documento
+    doc.setFont('helvetica');
+    doc.setFontSize(18);
+    doc.setTextColor(40, 40, 40);
+    doc.text('Reporte de Trabajos', 105, 15, { align: 'center' });
+
+    // Datos para la tabla
+    const headers = [
+      ['Semana', 'No. Contrato', 'Consultorio', 'Trabajo', 'Total Cobrado']
+    ];
+
+    const body = pagosFilter.map(pago => [
+      pago.semana || 'N/A',
+      pago.noContrato || 'N/A',
+      pago.consultorio || 'N/A',
+      pago.trabajo || 'N/A',
+      `$${(+pago.totalPorCobrar).toLocaleString('es-MX', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`
+    ]);
+
+    // Agregar tabla
+    autoTable(doc, {
+      head: headers,
+      body: body,
+      startY: 25,
+      margin: { top: 20 },
+      styles: {
+        font: 'helvetica',
+        fontSize: 10,
+        cellPadding: 4,
+        valign: 'middle',
+        halign: 'left'
+      },
+      headStyles: {
+        fillColor: [128, 0, 128],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      bodyStyles: {
+        textColor: [40, 40, 40]
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      },
+      columnStyles: {
+        0: { cellWidth: 25, halign: 'center' },
+        1: { cellWidth: 25, halign: 'center' },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 'auto' },
+        4: { cellWidth: 30, halign: 'right' }
+      }
+    });
+
+    // Pie de página
+    const total = pagosFilter.reduce((sum, pago) => sum + (+pago.totalPorCobrar || 0), 0);
+    doc.setFontSize(12); // Aumentar el tamaño de fuente (de 10 a 12)
+    doc.setFont('helvetica', 'bold'); // Establecer fuente en negrita
+    doc.text(
+      `TOTAL GENERAL COBRADO: $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`,
+      14,
+      (doc as any).lastAutoTable.finalY + 10
+    );
+
+    // Guardar PDF
+    doc.save(`reporte_trabajos_${new Date().toISOString().slice(0, 10)}.pdf`);
+  }
+
+  shareViaWhatsApp() {
+    // Crear el texto para compartir
+    const pagosFilter = this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0)
+    let shareText = '📋 *Reporte de Trabajos* 📋\n\n';
+    shareText += `📅 Generado el: ${new Date().toLocaleDateString()}\n\n`;
+    shareText += '--------------------------------\n\n';
+    // Agregar cada trabajo al texto
+    pagosFilter.forEach((pago, index) => {
+      shareText += `*Semana*: ${pago.semana || 'N/A'}\n`;
+      shareText += `*No. Contrato*: ${pago.noContrato || 'N/A'}\n`;
+      shareText += `*Consultorio*: ${pago.consultorio || 'N/A'}\n`;
+      shareText += `*Trabajo*: ${pago.trabajo || 'N/A'}\n`;
+      shareText += `*Total Cobrado*: $${(+pago.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n`;
+
+      if (index < pagosFilter.length - 1) {
+        shareText += '--------------------------------\n\n';
+      }
+    });
+
+    // Total general
+    const totalGeneral = pagosFilter.reduce((sum, pago) => sum + (+pago.totalPorCobrar || 0), 0);
+    shareText += '\n--------------------------------\n';
+    shareText += `*TOTAL GENERAL COBRADO*: $${totalGeneral.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n`;
+
+    // Codificar el texto para URL de WhatsApp
+    const encodedText = encodeURIComponent(shareText);
+
+    // Abrir WhatsApp con el texto
+    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
   }
 
 }
