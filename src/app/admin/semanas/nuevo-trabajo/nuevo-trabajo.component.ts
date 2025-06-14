@@ -60,6 +60,7 @@ export class NuevoTrabajoComponent {
   id = '';
   semanas: any = [];
   semanasFilter: any = [];
+  semanasTodasFilter: any = [];
   trabajos: any = [];
   trabajosFilter: any = [];
   tonos: any = [];
@@ -115,6 +116,7 @@ export class NuevoTrabajoComponent {
     if (dataSemanas.length > 0) {
       this.semanas.push(dataSemanas[0].nombre);
       this.semanasFilter = this.semanas;
+      this.semanasTodasFilter = dataSemanas.map((res:any) => res.nombre);
       this.getPagos();
     }
   }
@@ -340,7 +342,7 @@ export class NuevoTrabajoComponent {
 
   async validarNuevos(msj: string, datos: any) {
     if (
-      !this.semanasFilter.some(
+      !this.semanasTodasFilter.some(
         (semana: any) => semana.toLowerCase() === datos.semana.toLowerCase()
       ) &&
       datos.semana !== ''

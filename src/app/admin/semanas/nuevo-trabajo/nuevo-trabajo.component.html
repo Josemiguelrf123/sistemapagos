@@ -97,7 +97,7 @@
                       (input)="_filterProvMateriales($any($event.target).value)">
                     <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>calendar_today</mat-icon>
                     <mat-autocomplete autoActiveFirstOption #autoProvSemana="matAutocomplete">
-                      @for (semana of semanasFilter; track semana) {
+                      @for (semana of semanasTodasFilter; track semana) {
                       <mat-option [value]="semana">{{ semana }}</mat-option>
                       }
                     </mat-autocomplete>
