@@ -15,6 +15,8 @@ export class Pago {
   totalPorCobrar: string;
   pagado: string;
   observaciones: string;
+  trabajoAnterior: null | Pago;
+  trabajoReferencia: null | Pago;
 
   constructor(pago: Pago) {
     {
@@ -34,6 +36,8 @@ export class Pago {
       this.totalPorCobrar = pago.totalPorCobrar || '';
       this.pagado = pago.pagado || '';
       this.observaciones = pago.observaciones || '';
+      this.trabajoAnterior = pago.trabajoAnterior || null;
+      this.trabajoReferencia = pago.trabajoReferencia || null;
     }
   }
 }

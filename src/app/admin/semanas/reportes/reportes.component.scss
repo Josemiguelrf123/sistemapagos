@@ -87,6 +87,49 @@
   cursor: pointer;
 }
 
+.filter-card {
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mat-expansion-panel {
+  margin-bottom: 15px;
+}
+
+.d-md-none {
+  .mat-form-field {
+    width: 100%;
+
+    /* Asegurar que los datepickers no se salgan de la pantalla */
+    .mat-datepicker-content {
+      max-width: 100vw;
+      transform: translateX(0) !important;
+    }
+  }
+}
+
+.filter-row {
+  margin-bottom: 10px;
+}
+
+.mat-datepicker-content {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.clear-filters-btn {
+  height: 56px;
+  /* Para que coincida con la altura de los inputs */
+}
+
+.compact-table {
+  width: 100%;
+
+  .mat-header-cell,
+  .mat-cell {
+    padding: 8px 16px;
+  }
+}
+
 .selected-info {
   margin-bottom: 16px;
 

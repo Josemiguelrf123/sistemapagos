@@ -1,13 +1,13 @@
 <nav #navbar class="navbar active">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a href="#" onClick="return false;" class="navbar-toggle collapsed"
-        (click)="isNavbarCollapsed = !isNavbarCollapsed" aria-expanded="false"></a>
+      <!-- <a href="#" onClick="return false;" class="navbar-toggle collapsed"
+        (click)="isNavbarCollapsed = !isNavbarCollapsed" aria-expanded="false"></a> -->
       <a href="#" onClick="return false;" class="bars" (click)="mobileMenuSidebarOpen($event,'overlay-open')"></a>
-      <a class="navbar-brand" routerLink={{homePage}}>
-        <!-- <img src="assets/images/logo.png" alt="" /> -->
+      <div class="navbar-brand">
+        <img src="assets/images/logo.png" alt="" />
         <!-- <span class="logo-name">Sistema de pagos por semana</span> -->
-      </a>
+      </div>
     </div>
     <div class="collapse navbar-collapse" [ngClass]="isNavbarCollapsed ? '' : 'show'">
       <ul class="float-start collapse-menu-icon">

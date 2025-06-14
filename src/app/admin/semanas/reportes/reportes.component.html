@@ -1,0 +1,436 @@
+<section class="content">
+  <div class="content-block">
+    <div class="block-header">
+      <!-- breadcrumb -->
+      <app-breadcrumb [title]="'Semanas'" [active_item]="'Reportes'"></app-breadcrumb>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <!-- Filtros para desktop -->
+        <div class="card d-none d-md-block mb-3">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Buscar</mat-label>
+                  <input matInput [formControl]="searchControl" placeholder="No. contrato, trabajo, consultorio...">
+                  <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-2 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Consultorio</mat-label>
+                  <mat-select [formControl]="consultorioControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let consultorio of consultorios" [value]="consultorio">
+                      {{consultorio}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-md-2 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Semana</mat-label>
+                  <mat-select [formControl]="semanaControl">
+                    <mat-option value="">Todas</mat-option>
+                    <mat-option *ngFor="let semana of semanas" [value]="semana">
+                      {{semana}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-md-2 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Estado</mat-label>
+                  <mat-select [formControl]="estadoControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let estado of estados" [value]="estado">
+                      {{estado | titlecase}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-md-2 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Pagado</mat-label>
+                  <mat-select [formControl]="pagadoControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let option of pagadoOptions" [value]="option">
+                      {{option}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-md-2 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Urgente</mat-label>
+                  <mat-select [formControl]="urgenteControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let option of urgenteOptions" [value]="option">
+                      {{option}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-md-2 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Tono</mat-label>
+                  <mat-select [formControl]="tonoControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let tono of tonos" [value]="tono">
+                      {{tono}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="row">
+
+              <div class="col-md-2 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Material</mat-label>
+                  <mat-select [formControl]="materialControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let material of materiales" [value]="material">
+                      {{material}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-md-3 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Fecha Registro (inicio)</mat-label>
+                  <input matInput [matDatepicker]="pickerRegistroInicio" [formControl]="fechaRegistroInicioControl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerRegistroInicio"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerRegistroInicio></mat-datepicker>
+                </mat-form-field>
+              </div>
+
+              <div class="col-md-3 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Fecha Registro (fin)</mat-label>
+                  <input matInput [matDatepicker]="pickerRegistroFin" [formControl]="fechaRegistroFinControl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerRegistroFin"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerRegistroFin></mat-datepicker>
+                </mat-form-field>
+              </div>
+
+              <div class="col-md-3 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Fecha Entrega (inicio)</mat-label>
+                  <input matInput [matDatepicker]="pickerEntregaInicio" [formControl]="fechaEntregaInicioControl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerEntregaInicio"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerEntregaInicio></mat-datepicker>
+                </mat-form-field>
+              </div>
+
+              <div class="col-md-3 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Fecha Entrega (fin)</mat-label>
+                  <input matInput [matDatepicker]="pickerEntregaFin" [formControl]="fechaEntregaFinControl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerEntregaFin"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerEntregaFin></mat-datepicker>
+                </mat-form-field>
+              </div>
+              <div class="col-md-2 mb-2 d-flex align-items-center">
+                <button mat-stroked-button color="warn" class="w-100" (click)="resetFilters()">
+                  <mat-icon>clear</mat-icon> Limpiar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtros para móvil -->
+        <div class="d-md-none mb-3">
+          <mat-expansion-panel [(expanded)]="panelOpenState">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>filter_list</mat-icon>
+                Filtros
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <mat-form-field appearance="outline" class="w-100 mb-2">
+              <mat-label>Buscar</mat-label>
+              <input matInput [formControl]="searchControl" placeholder="No. contrato, trabajo, consultorio...">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-100 mb-2">
+              <mat-label>Consultorio</mat-label>
+              <mat-select [formControl]="consultorioControl">
+                <mat-option value="">Todos</mat-option>
+                <mat-option *ngFor="let consultorio of consultorios" [value]="consultorio">
+                  {{consultorio}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-100 mb-2">
+              <mat-label>Semana</mat-label>
+              <mat-select [formControl]="semanaControl">
+                <mat-option value="">Todas</mat-option>
+                <mat-option *ngFor="let semana of semanas" [value]="semana">
+                  {{semana}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-100 mb-2">
+              <mat-label>Estado</mat-label>
+              <mat-select [formControl]="estadoControl">
+                <mat-option value="">Todos</mat-option>
+                <mat-option *ngFor="let estado of estados" [value]="estado">
+                  {{estado | titlecase}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-100 mb-2">
+              <mat-label>Pagado</mat-label>
+              <mat-select [formControl]="pagadoControl">
+                <mat-option value="">Todos</mat-option>
+                <mat-option *ngFor="let option of pagadoOptions" [value]="option">
+                  {{option}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-100 mb-2">
+              <mat-label>Urgente</mat-label>
+              <mat-select [formControl]="urgenteControl">
+                <mat-option value="">Todos</mat-option>
+                <mat-option *ngFor="let option of urgenteOptions" [value]="option">
+                  {{option}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-100 mb-2">
+              <mat-label>Tono</mat-label>
+              <mat-select [formControl]="tonoControl">
+                <mat-option value="">Todos</mat-option>
+                <mat-option *ngFor="let tono of tonos" [value]="tono">
+                  {{tono}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-100 mb-2">
+              <mat-label>Material</mat-label>
+              <mat-select [formControl]="materialControl">
+                <mat-option value="">Todos</mat-option>
+                <mat-option *ngFor="let material of materiales" [value]="material">
+                  {{material}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-100 mb-2">
+              <mat-label>Fecha Registro (inicio)</mat-label>
+              <input matInput [matDatepicker]="pickerRegistroInicioMobile" [formControl]="fechaRegistroInicioControl">
+              <mat-datepicker-toggle matSuffix [for]="pickerRegistroInicioMobile"></mat-datepicker-toggle>
+              <mat-datepicker #pickerRegistroInicioMobile></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-100 mb-2">
+              <mat-label>Fecha Registro (fin)</mat-label>
+              <input matInput [matDatepicker]="pickerRegistroFinMobile" [formControl]="fechaRegistroFinControl">
+              <mat-datepicker-toggle matSuffix [for]="pickerRegistroFinMobile"></mat-datepicker-toggle>
+              <mat-datepicker #pickerRegistroFinMobile></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-100 mb-2">
+              <mat-label>Fecha Entrega (inicio)</mat-label>
+              <input matInput [matDatepicker]="pickerEntregaInicioMobile" [formControl]="fechaEntregaInicioControl">
+              <mat-datepicker-toggle matSuffix [for]="pickerEntregaInicioMobile"></mat-datepicker-toggle>
+              <mat-datepicker #pickerEntregaInicioMobile></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-100 mb-2">
+              <mat-label>Fecha Entrega (fin)</mat-label>
+              <input matInput [matDatepicker]="pickerEntregaFinMobile" [formControl]="fechaEntregaFinControl">
+              <mat-datepicker-toggle matSuffix [for]="pickerEntregaFinMobile"></mat-datepicker-toggle>
+              <mat-datepicker #pickerEntregaFinMobile></mat-datepicker>
+            </mat-form-field>
+
+            <button mat-stroked-button color="warn" class="w-100" (click)="resetFilters()">
+              <mat-icon>clear</mat-icon> Limpiar filtros
+            </button>
+          </mat-expansion-panel>
+        </div>
+        <div class="card d-none d-md-block">
+          <div class="column-toggle-button d-none d-md-inline-block">
+            <button mat-button [matMenuTriggerFor]="columnsMenu">
+              <mat-icon>view_column</mat-icon>
+              Selecciona qué columnas quieres mostrar
+            </button>
+          </div>
+
+          <mat-menu #columnsMenu="matMenu">
+            @for (column of availableColumns; track column) {
+            <button mat-menu-item (click)="toggleColumn(column)">
+              <mat-icon>
+                {{ displayedColumns.includes(column) ? 'check_box' : 'check_box_outline_blank' }}
+              </mat-icon>
+              {{ column | titlecase }}
+            </button>
+            }
+          </mat-menu>
+          <div class="table-container">
+            <div class="responsive-table-wrapper">
+              @if (dataObs$ | async; as trabajos) {
+              <table mat-table [dataSource]="trabajos" matSort class="compact-table">
+                <!-- ID Column -->
+                <ng-container matColumnDef="id">
+                  <mat-header-cell *matHeaderCellDef mat-sort-header>Id</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{row.id}}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="semana">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Semana</th>
+                  <td mat-cell *matCellDef="let row">{{row.semana}}</td>
+                </ng-container>
+                <ng-container matColumnDef="noContrato">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>No. Contrato</th>
+                  <td mat-cell *matCellDef="let row">{{row.noContrato}}</td>
+                </ng-container>
+                <ng-container matColumnDef="trabajo">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Trabajo</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{row.trabajo}}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="consultorio">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Consultorio</th>
+                  <td mat-cell *matCellDef="let row">{{row.consultorio}}</td>
+                </ng-container>
+                <ng-container matColumnDef="tono">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Tono</th>
+                  <td mat-cell *matCellDef="let row">{{row.tono}}</td>
+                </ng-container>
+                <ng-container matColumnDef="material">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Material</th>
+                  <td mat-cell *matCellDef="let row">{{row.material}}</td>
+                </ng-container>
+                <ng-container matColumnDef="fechaRegistro">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Registro</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{row.fechaRegistro ? (row.fechaRegistro.seconds
+                    * 1000 | date: 'mediumDate'): ''}}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="fechaEntrega">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Entrega</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{row.fechaEntrega ? (row.fechaEntrega.seconds
+                    * 1000 | date: 'mediumDate'): ''}}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="pruebaTerminada">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Prueba o Terminada</th>
+                  <td mat-cell *matCellDef="let row">{{row.pruebaTerminada}}</td>
+                </ng-container>
+                <ng-container matColumnDef="urgente">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Urgente</th>
+                  <td mat-cell *matCellDef="let row">{{row.urgente}}</td>
+                </ng-container>
+                <ng-container matColumnDef="placabase">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Placa Base</th>
+                  <td mat-cell *matCellDef="let row">{{row.placaBase}}</td>
+                </ng-container>
+                <ng-container matColumnDef="total">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Precio Total</th>
+                  <td mat-cell *matCellDef="let row">
+                    ${{(+row?.precio).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2})}}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="totalcobrar">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Total por cobrar</th>
+                  <td mat-cell *matCellDef="let row">
+                    ${{(+row?.totalPorCobrar).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2})}}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="observaciones">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Observaciones</th>
+                  <td mat-cell *matCellDef="let row">{{row.observaciones}}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                  [ngClass]="{'fila-verde': row.pagado === 'SI'}">
+                </tr>
+              </table>
+              }
+
+              <!-- Loading spinner -->
+              @if (!pagos) {
+              <div class="tbl-spinner">
+                <mat-progress-spinner color="primary" [diameter]="40" mode="indeterminate">
+                </mat-progress-spinner>
+              </div>
+              }
+              @if (pagos.length === 0) {
+              <div class="no-results">
+                No hay resultados
+              </div>
+              }
+              <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]"></mat-paginator>
+            </div>
+          </div>
+        </div>
+        <div class="d-md-none">
+          <div class="row">
+            @for (pago of pagos; track pago.id) {
+            <div class="col-12 mb-3">
+              <mat-card class="shadow-sm rounded" [class.card-urgente]="pago.pagado === 'SI'"
+                [class.card-normal]="pago.pagado !== 'SI'">
+                <mat-card-header>
+                  <mat-card-title class="text-primary fw-bold">
+                    {{ pago.semana }} - #{{ pago.noContrato }}
+                  </mat-card-title>
+                  <mat-card-subtitle class="text-muted">{{pago.trabajo}}</mat-card-subtitle>
+                </mat-card-header>
+                <hr>
+                <mat-card-content>
+                  <p><strong>Consultorio:</strong> {{ pago.consultorio }}</p>
+                  <p><strong>Tono:</strong> {{ pago.tono }}</p>
+                  <p><strong>Material:</strong> {{ pago.material }}</p>
+                  <p><strong>Fecha Registro:</strong>
+                    {{ pago.fechaRegistro ? (pago.fechaRegistro.seconds * 1000 | date: 'mediumDate') : '' }}
+                  </p>
+                  <p><strong>Fecha Entrega:</strong>
+                    {{ pago.fechaEntrega ? (pago.fechaEntrega.seconds * 1000 | date: 'mediumDate') : '' }}
+                  </p>
+                  <p><strong>Prueba o Terminada:</strong> {{ pago.pruebaTerminada }}</p>
+                  <p><strong>Urgente:</strong> {{ pago.urgente }}</p>
+                  <p><strong>Placa Base:</strong> {{ pago.placaBase }}</p>
+                  <div class="mt-2">
+                    <p class="fw-semibold text-purple">
+                      <span class="compact-label">Precio Total:</span>
+                      ${{ (+pago.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                    </p>
+                    <p class="fw-semibold text-success">
+                      <span class="compact-label">Total por cobrar:</span>
+                      ${{ (+pago.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                    </p>
+                  </div>
+                  @if (pago.observaciones !== '') {
+                  <p class="mt-2"><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
+                  }
+                </mat-card-content>
+              </mat-card>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

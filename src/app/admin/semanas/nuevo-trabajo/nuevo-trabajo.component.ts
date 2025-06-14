@@ -77,11 +77,14 @@ export class NuevoTrabajoComponent {
     'noContrato',
     'consultorio',
     'trabajo',
+    'tono',
     'material',
-    'urgente',
-    'precio',
+    'fechaRegistro',
     'fechaEntrega',
+    'precioTotal',
+    'cobrado',
   ];
+  selectedItemOriginal: any = null;
   selectedItem: any = null;
 
   constructor(
@@ -100,35 +103,38 @@ export class NuevoTrabajoComponent {
     this.route.params.subscribe(({ id }) => this.validarId(id));
   }
 
-  async getPagos() {
-    const dataPagos: any = [];
-    const collRef = await this.db.asyncCollWhereOrderBy(
-      'pagos',
-      'pagado',
-      '==',
-      'SI',
-      'fechaRegistro',
-      'desc'
-    );
-    collRef.forEach((pagos) => dataPagos.push(pagos.data()));
-    this.originalData = dataPagos;
-    this.filteredData = [...this.originalData];
-    console.log(this.originalData);
-  }
-
   async getValueSemanas() {
     this.semanas = [];
     const dataSemanas: any = [];
     const collRef = await this.db.asyncCollOrderBy(
       'semanas',
-      'create_at',
+      'nombre',
       'desc'
     );
     collRef.forEach((tono) => dataSemanas.push(tono.data()));
     if (dataSemanas.length > 0) {
       this.semanas.push(dataSemanas[0].nombre);
       this.semanasFilter = this.semanas;
+      this.getPagos();
     }
+  }
+
+  async getPagos() {
+    const dataPagos: any = [];
+    const collRef = await this.db.asyncCollWhereOrderBy(
+      'pagos',
+      'pagado',
+      '!=',
+      'SI',
+      'fechaRegistro',
+      'desc'
+    );
+    collRef.forEach((pagos) => dataPagos.push(pagos.data()));
+    console.log(this.semanas[0]);
+    
+    this.originalData = dataPagos.filter((res: any) => res.semana !== this.semanas[0]);
+    this.filteredData = [...this.originalData];
+    console.log(this.originalData);
   }
 
   async getValueTrabajos() {
@@ -200,6 +206,8 @@ export class NuevoTrabajoComponent {
     try {
       const doc = await this.db.asyncDoc('pagos', id);
       this.pago = doc.data() as Pago;
+      this.pago.trabajoAnterior ||= null;
+      this.pago.fechaEntrega ||= '';
       this.edit = true;
       if (this.pago.fechaRegistro) {
         this.pago.fechaRegistro = new Date(
@@ -211,6 +219,8 @@ export class NuevoTrabajoComponent {
           this.pago.fechaEntrega.seconds * 1000
         );
       }
+      this.selectedItem = this.pago.trabajoAnterior;
+      this.selectedItemOriginal = JSON.parse(JSON.stringify(this.pago.trabajoAnterior));
       this.crearFormulario();
     } catch (error) {
       console.log(error);
@@ -242,8 +252,8 @@ export class NuevoTrabajoComponent {
     return this.formControl.hasError('required')
       ? 'Campo requerido.'
       : this.formControl.hasError('email')
-      ? 'No es un correo electrónico valido.'
-      : '';
+        ? 'No es un correo electrónico valido.'
+        : '';
   }
 
   createContactForm(): UntypedFormGroup {
@@ -273,9 +283,9 @@ export class NuevoTrabajoComponent {
         new Date(this.pagosForm.controls['fechaRegistro'].value)
       );
     }
-    if (this.pagosForm.controls['FechaEntrega'].value !== '') {
-      this.pagosForm.controls['FechaEntrega'].setValue(
-        new Date(this.pagosForm.controls['FechaEntrega'].value)
+    if (this.pagosForm.controls['fechaEntrega'].value !== '') {
+      this.pagosForm.controls['fechaEntrega'].setValue(
+        new Date(this.pagosForm.controls['fechaEntrega'].value)
       );
     }
 
@@ -291,23 +301,41 @@ export class NuevoTrabajoComponent {
       {
         ...this.pagosForm.getRawValue(),
         createAt: new Date(),
+        trabajoAnterior: this.selectedItem,
+        idTrabajoAnterior: this.selectedItem ? this.selectedItem.id : '',
       },
       'pagos',
       id
     );
-
-    this.validarNuevos('Nuevo trabajo guardado correctamente', datos);
-    this.router.navigate(['/admin/semanas/listado-semanas']);
+    this.cambiarValorSemana(datos, 'Nuevo trabajo guardado correctamente');
   }
 
   async editarRegistro() {
-    const opt = await this.alertService.alertConfirm('editar la información');
+    const opt = await this.alertService.alertConfirm('¿Estás seguro de editar la información?');
     if (opt.isConfirmed) {
       const datos = this.pagosForm.getRawValue();
       this.alertService.loanding('Modificando datos del registro de pago.');
-      await this.db.updateDoc(datos, 'pagos', datos.id);
-      this.validarNuevos('Datos del trabajo modificados correctamente', datos);
+      await this.db.updateDoc(
+        {
+          ...datos,
+          trabajoAnterior: this.selectedItem,
+          idTrabajoAnterior: this.selectedItem ? this.selectedItem.id : ''
+        },
+        'pagos',
+        datos.id
+      );
+      this.cambiarValorSemana(datos, 'Datos del trabajo modificados correctamente');
     }
+  }
+
+  async cambiarValorSemana(datos: any, msg: string) {
+    if (this.selectedItem) {
+      await this.db.updateDoc({ trabajoReferencia: datos, idReferencia: datos.id, pagado: 'SI' }, 'pagos', this.selectedItem.id);
+    }
+    if (this.selectedItem && this.selectedItemOriginal && this.selectedItemOriginal.id !== this.selectedItem.id) {
+      await this.db.updateDoc({ trabajoReferencia: null, idReferencia: '', pagado: '' }, 'pagos', this.selectedItemOriginal.id);
+    }
+    this.validarNuevos(msg, datos);
   }
 
   async validarNuevos(msj: string, datos: any) {
@@ -444,48 +472,33 @@ export class NuevoTrabajoComponent {
     );
   }
 
-  onItemSelected(item: any): void {
-    this.selectedItem = item;
-    this.mostrarModal = false; // Cierra el modal automáticamente al seleccionar
-
-    // Opcional: Desplázate suavemente a la tarjeta de selección
-    setTimeout(() => {
-      document.querySelector('.selected-info')?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
+  async onItemSelected(item: any) {
+    const mensaje = this.selectedItem ?
+      '¿Estás seguro de seleccionar este trabajo? Se reemplazará por el que habías seleccionado anteriormente.' :
+      '¿Deseas seleccionar este trabajo?';
+    const opt = await this.alertService.alertConfirm(mensaje);
+    if (opt.isConfirmed) {
+      this.selectedItem = item;
+      this.mostrarModal = false;
+      this.pagosForm.patchValue({
+        noContrato: this.selectedItem.noContrato || '',
+        trabajo: this.selectedItem.trabajo || '',
+        consultorio: this.selectedItem.consultorio || '',
+        tono: this.selectedItem.tono || '',
+        material: this.selectedItem.material || '',
+        urgente: this.selectedItem.urgente || 'NO',
+        placaBase: this.selectedItem.placaBase || 'NO',
+        precio: this.selectedItem.precio || 0,
+        observaciones: this.selectedItem.observaciones || '',
       });
-    }, 100);
-  }
-
-  clearSelection(): void {
-    this.selectedItem = null;
-  }
-
-  fillFormWithSelection(): void {
-    if (!this.selectedItem) return;
-
-    // Rellena el formulario con los datos seleccionados
-    this.pagosForm.patchValue({
-      semana: this.selectedItem.semana || '',
-      noContrato: this.selectedItem.noContrato || '',
-      trabajo: this.selectedItem.trabajo || '',
-      consultorio: this.selectedItem.consultorio || '',
-      tono: this.selectedItem.tono || '',
-      material: this.selectedItem.material || '',
-      fechaRegistro: new Date(this.selectedItem.fechaRegistro.seconds * 1000),
-      fechaEntrega: new Date(this.selectedItem.FechaEntrega.seconds * 1000),
-      pruebaTerminada: this.selectedItem.pruebaTerminada || 'terminada',
-      urgente: this.selectedItem.urgente || 'NO',
-      placaBase: this.selectedItem.placaBase || 'NO',
-      precio: this.selectedItem.precio || 0,
-      totalPorCobrar: this.selectedItem.totalPorCobrar || 0,
-      observaciones: this.selectedItem.observaciones || '',
-      pagado: this.selectedItem.pagado || 'NO',
-    });
-
-    this.alertService.toast(
-      'Formulario rellenado con los datos seleccionados',
-      'success-snackbar'
-    );
+      setTimeout(() => {
+        document.querySelector('.selected-info')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 100);
+    } else {
+      this.selectedItem = null;
+    }
   }
 }

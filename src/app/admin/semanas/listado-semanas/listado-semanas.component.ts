@@ -15,11 +15,12 @@ import { AlertService } from '@core/service/alert.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { FeatherIconsComponent } from '@shared/components/feather-icons/feather-icons.component';
 import { MatRippleModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-listado-semanas',
@@ -36,13 +37,14 @@ import { MatCardModule } from '@angular/material/card';
     MatButtonModule,
     MatTableModule,
     MatCheckboxModule,
-    FeatherIconsComponent,
     MatRippleModule,
     MatProgressSpinnerModule,
     MatPaginatorModule,
     DatePipe,
     MatMenuModule,
-    MatCardModule
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule
   ],
 })
 export class ListadoSemanasComponent implements OnDestroy {
@@ -91,6 +93,9 @@ export class ListadoSemanasComponent implements OnDestroy {
   ];
   semanas: any = [];
   semanaSelect = '';
+  mostrarModal = false;
+  selectedItem!: Pago;
+  selectedItem1!: Pago;
 
   constructor(
     private db: FirestoreService,
@@ -112,9 +117,19 @@ export class ListadoSemanasComponent implements OnDestroy {
     this.subscriptions.add(
       query.subscribe({
         next: async (pagos: any) => {
-          this.semanas = Array.from(new Set(pagos.map((res: any) => res.semana)));
+          for (let i = 0; i < pagos.length; i++) {
+            pagos[i].trabajoAnterior ||= null;
+            pagos[i].trabajoReferencia ||= null;
+          }
           this.pagosTodos = pagos;
-          const ultimaSemana = this.pagosTodos[0].semana;
+          const semanas = this.pagosTodos.map((res: Pago) => res.semana);
+          const semanasUnicasOrdenadas = [...new Set(semanas)].sort((a, b) => {
+            const numA = parseInt(a.replace(/\D/g, ''));
+            const numB = parseInt(b.replace(/\D/g, ''));
+            return numB - numA;
+          });
+          this.semanas = semanasUnicasOrdenadas;
+          const ultimaSemana = semanasUnicasOrdenadas[0];
           this.semanaSelect = ultimaSemana;
           this.pagos = this.pagosTodos.filter((res: Pago) => res.semana === ultimaSemana);
           this.pagosFilter = this.pagos;
@@ -226,10 +241,14 @@ export class ListadoSemanasComponent implements OnDestroy {
     }
   }
 
-  async eliminarExpediente(row: any) {
-    const opt = await this.alertService.alertConfirm('eliminar el pago');
+  async eliminarPago(row: any) {
+    row.idTrabajoAnterior ||= '';
+    const opt = await this.alertService.alertConfirm('¿Estás seguro de eliminar el pago?');
     if (opt.isConfirmed) {
       await this.db.deleteDoc('pagos', row.id);
+      if (row.idTrabajoAnterior !== '') {
+        await this.db.updateDoc({ trabajoReferencia: null, idReferencia: '', pagado: '' }, 'pagos', row.idTrabajoAnterior);
+      }
       this.alertService.toast(
         'Pago eliminado correctamente',
         'snackbar-success'
@@ -253,6 +272,13 @@ export class ListadoSemanasComponent implements OnDestroy {
     } else {
       this.displayedColumns.splice(-1, 0, column); // Inserta antes de acciones
     }
+  }
+
+  abrirModal(item: any, item1: any) {
+    item.pagado ||= 'SI'
+    this.mostrarModal = true;
+    this.selectedItem = item;
+    this.selectedItem1 = item1;
   }
 
 }

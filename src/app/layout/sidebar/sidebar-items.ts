@@ -1,17 +1,17 @@
 import { RouteInfo } from './sidebar.metadata';
 export const ROUTES: RouteInfo[] = [
-  {
-    path: '',
-    title: 'MENUITEMS.MAIN.TEXT',
-    iconType: '',
-    icon: '',
-    class: '',
-    groupTitle: true,
-    badge: '',
-    badgeClass: '',
-    role: ['All'],
-    submenu: [],
-  },
+  // {
+  //   path: '',
+  //   title: 'MENUITEMS.MAIN.TEXT',
+  //   iconType: '',
+  //   icon: '',
+  //   class: '',
+  //   groupTitle: true,
+  //   badge: '',
+  //   badgeClass: '',
+  //   role: ['All'],
+  //   submenu: [],
+  // },
 
   // Admin Modules
   {
@@ -40,6 +40,18 @@ export const ROUTES: RouteInfo[] = [
       {
         path: '/admin/semanas/listado-semanas',
         title: 'Semanas',
+        iconType: '',
+        icon: '',
+        class: 'ml-menu',
+        groupTitle: false,
+        badge: '',
+        badgeClass: '',
+        role: [''],
+        submenu: [],
+      },
+      {
+        path: '/admin/semanas/reportes',
+        title: 'Reporte',
         iconType: '',
         icon: '',
         class: 'ml-menu',

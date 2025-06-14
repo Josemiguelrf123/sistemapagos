@@ -68,7 +68,7 @@ export class AlertService {
   ): Promise<import('sweetalert2').SweetAlertResult<any>> {
     return Swal.fire({
       title,
-      text: `¿Estás seguro de ${mensaje}?`,
+      text: mensaje,
       showCancelButton: true,
       confirmButtonText,
       cancelButtonText,
