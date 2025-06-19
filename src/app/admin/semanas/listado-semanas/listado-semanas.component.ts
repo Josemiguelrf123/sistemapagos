@@ -304,25 +304,29 @@ export class ListadoSemanasComponent implements OnDestroy {
   // En tu componente
   generatePDF() {
     const pagosFilter = this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0)
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
 
     // Configuración del documento
     doc.setFont('helvetica');
     doc.setFontSize(18);
     doc.setTextColor(40, 40, 40);
-    doc.text('Reporte de Trabajos', 105, 15, { align: 'center' });
+    doc.text(`Reporte de Trabajos ${this.semanaSelect}`, 148.5, 15, { align: 'center' });
 
     // Datos para la tabla
     const headers = [
-      ['No. Contrato', 'Consultorio', 'Trabajo', 'Placa Base', 'Urgente', 'Total a Cobrar']
+      ['No. Contrato', 'Consultorio', 'Trabajo', 'Material', 'Placa Base', 'Urgente', 'Estatus', 'Total a Cobrar']
     ];
 
     const body = pagosFilter.map(pago => [
-      pago.noContrato || 'N/A',
-      pago.consultorio || 'N/A',
-      pago.trabajo || 'N/A',
-      pago.placaBase || 'N/A',
-      pago.urgente || 'N/A',
+      pago.noContrato || '',
+      pago.consultorio || '',
+      pago.trabajo || '',
+      pago.material || '',
+      pago.placaBase || 'NO',
+      pago.urgente || 'NO',
+      pago.pruebaTerminada = pago.pruebaTerminada
+        ? pago.pruebaTerminada.charAt(0).toUpperCase() + pago.pruebaTerminada.slice(1).toLowerCase()
+        : 'Terminada',
       `$${(+pago.totalPorCobrar).toLocaleString('es-MX', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
@@ -360,7 +364,9 @@ export class ListadoSemanasComponent implements OnDestroy {
         2: { cellWidth: 'auto' },
         3: { cellWidth: 25, halign: 'center' },
         4: { cellWidth: 25, halign: 'center' },
-        5: { cellWidth: 30, halign: 'center' }
+        5: { cellWidth: 25, halign: 'center' },
+        6: { cellWidth: 25, halign: 'center' },
+        7: { cellWidth: 30, halign: 'center' }
       }
     });
 
@@ -375,7 +381,7 @@ export class ListadoSemanasComponent implements OnDestroy {
     );
 
     // Guardar PDF
-    doc.save(`reporte_trabajos_${new Date().toISOString().slice(0, 10)}.pdf`);
+    doc.save(`reporte_trabajos_${this.semanaSelect}.pdf`);
   }
 
   shareViaWhatsApp() {
@@ -385,9 +391,10 @@ export class ListadoSemanasComponent implements OnDestroy {
     shareText += '--------------------------------\n\n';
     // Agregar cada trabajo al texto
     pagosFilter.forEach((pago, index) => {
-      shareText += `*No. Contrato*: ${pago.noContrato || 'N/A'}\n`;
-      shareText += `*Consultorio*: ${pago.consultorio || 'N/A'}\n`;
-      shareText += `*Trabajo*: ${pago.trabajo || 'N/A'} ${pago.placaBase.toLowerCase() === 'si' ? ', con placa base' : ''} ${pago.urgente.toLowerCase() === 'si' ? 'y fue urgente' : ''}\n`;
+      shareText += `*No. Contrato*: ${pago.noContrato || ''}\n`;
+      shareText += `*Consultorio*: ${pago.consultorio || ''}\n`;
+      shareText += `*Trabajo*: ${pago.trabajo || ''} ${pago.placaBase.toLowerCase() === 'si' ? ', con placa base' : ''} ${pago.urgente.toLowerCase() === 'si' ? 'y fue urgente' : ''} (*${pago.pruebaTerminada ? pago.pruebaTerminada.charAt(0).toUpperCase() + pago.pruebaTerminada.slice(1).toLowerCase() : 'Terminada'}*)\n`;
+      shareText += `*Material*: ${pago.material || ''}\n`;
       shareText += `*Total a Cobrar*: $${(+pago.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n`;
 
       if (index < pagosFilter.length - 1) {

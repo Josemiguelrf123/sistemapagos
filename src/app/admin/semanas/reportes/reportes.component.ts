@@ -397,16 +397,20 @@ export class ReportesComponent implements OnDestroy {
 
     // Datos para la tabla
     const headers = [
-      ['Semana', 'No. Contrato', 'Consultorio', 'Trabajo', 'Placa Base', 'Urgente', 'Total Cobrado']
+      ['Semana', 'No. Contrato', 'Consultorio', 'Trabajo', 'Material', 'Placa Base', 'Urgente', 'Estatus', 'Total Cobrado']
     ];
 
     const body = pagosFilter.map(pago => [
-      pago.semana || 'N/A',
-      pago.noContrato || 'N/A',
-      pago.consultorio || 'N/A',
-      pago.trabajo || 'N/A',
-      pago.placaBase || 'N/A',
-      pago.urgente || 'N/A',
+      pago.semana || '',
+      pago.noContrato || '',
+      pago.consultorio || '',
+      pago.trabajo || '',
+      pago.material || '',
+      pago.placaBase || 'NO',
+      pago.urgente || 'NO',
+      pago.pruebaTerminada = pago.pruebaTerminada
+        ? pago.pruebaTerminada.charAt(0).toUpperCase() + pago.pruebaTerminada.slice(1).toLowerCase()
+        : 'Terminada',
       `$${(+pago.totalPorCobrar).toLocaleString('es-MX', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
@@ -445,7 +449,9 @@ export class ReportesComponent implements OnDestroy {
         3: { cellWidth: 'auto' },
         4: { cellWidth: 25, halign: 'center' },
         5: { cellWidth: 25, halign: 'center' },
-        6: { cellWidth: 30, halign: 'center' }
+        6: { cellWidth: 25, halign: 'center' },
+        7: { cellWidth: 25, halign: 'center' },
+        8: { cellWidth: 30, halign: 'center' }
       }
     });
 
@@ -473,7 +479,8 @@ export class ReportesComponent implements OnDestroy {
       shareText += `*Semana*: ${pago.semana || 'N/A'}\n`;
       shareText += `*No. Contrato*: ${pago.noContrato || 'N/A'}\n`;
       shareText += `*Consultorio*: ${pago.consultorio || 'N/A'}\n`;
-      shareText += `*Trabajo*: ${pago.trabajo || 'N/A'} ${pago.placaBase.toLowerCase() === 'si' ? ', con placa base' : ''} ${pago.urgente.toLowerCase() === 'si' ? 'y fue urgente' : ''}\n`;
+      shareText += `*Trabajo*: ${pago.trabajo || ''} ${pago.placaBase.toLowerCase() === 'si' ? ', con placa base' : ''} ${pago.urgente.toLowerCase() === 'si' ? 'y fue urgente' : ''} (*${pago.pruebaTerminada ? pago.pruebaTerminada.charAt(0).toUpperCase() + pago.pruebaTerminada.slice(1).toLowerCase() : 'Terminada'}*)\n`;
+      shareText += `*Material*: ${pago.material || ''}\n`;
       shareText += `*Total Cobrado*: $${(+pago.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n`;
 
       if (index < pagosFilter.length - 1) {
