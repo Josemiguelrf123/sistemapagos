@@ -75,6 +75,7 @@ export class NuevoTrabajoComponent {
   searchTerm: string = '';
   displayedColumns: string[] = [
     'select',
+    'semana',
     'noContrato',
     'consultorio',
     'trabajo',
@@ -106,19 +107,53 @@ export class NuevoTrabajoComponent {
 
   async getValueSemanas() {
     this.semanas = [];
-    const dataSemanas: any = [];
-    const collRef = await this.db.asyncCollOrderBy(
-      'semanas',
-      'nombre',
-      'desc'
+
+    const dataSemanas: any[] = [];
+    const collRef = await this.db.asyncCollOrderBy('semanas', 'nombre', 'desc');
+    collRef.forEach((doc) => dataSemanas.push(doc.data()));
+
+    // 🧼 Normaliza: sin tildes, minúsculas, trim
+    const normalizar = (texto: string): string =>
+      texto
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+
+    // 🧹 Quitar duplicados por clave normalizada
+    const mapaUnicos = new Map<string, string>();
+    for (const item of dataSemanas) {
+      const original = item.nombre || '';
+      const clave = normalizar(original);
+      if (!mapaUnicos.has(clave)) {
+        mapaUnicos.set(clave, original.trim());
+      }
+    }
+
+    // 🔠 Capitaliza la primera letra
+    const resultadoFinal = Array.from(mapaUnicos.values()).map((str) =>
+      str.charAt(0).toUpperCase() + str.slice(1)
     );
-    collRef.forEach((tono) => dataSemanas.push(tono.data()));
-    if (dataSemanas.length > 0) {
-      this.semanas.push(dataSemanas[0].nombre);
-      this.semanasFilter = this.semanas;
-      this.semanasTodasFilter = dataSemanas.map((res:any) => res.nombre);
+
+    // 🔢 Ordenar por número descendente (Semana 10 antes que Semana 2)
+    const ordenadas = resultadoFinal.sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ''), 10);
+      const numB = parseInt(b.replace(/\D/g, ''), 10);
+
+      if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
+      return a.localeCompare(b);
+    });
+
+    if (ordenadas.length > 0) {
+      this.semanas = ordenadas;
+      this.semanasFilter = [...ordenadas];
       this.getPagos();
     }
+  }
+
+  capitalizarPrimeraLetra(texto: string): string {
+    texto = texto.trim().toLowerCase();
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 
   async getPagos() {
@@ -132,65 +167,203 @@ export class NuevoTrabajoComponent {
       'desc'
     );
     collRef.forEach((pagos) => dataPagos.push(pagos.data()));
-    console.log(this.semanas[0]);
-    
+    dataPagos.forEach((item: Pago) => {
+      item.semana = this.capitalizarPrimeraLetra(item.semana);
+      item.consultorio = this.capitalizarPrimeraLetra(item.consultorio);
+      item.trabajo = this.capitalizarPrimeraLetra(item.trabajo);
+      item.material = this.capitalizarPrimeraLetra(item.material);
+      item.tono = item.tono !== '' ? item.tono.toLocaleUpperCase() : item.tono;
+    });
     this.originalData = dataPagos.filter((res: any) => res.semana !== this.semanas[0]);
     this.filteredData = [...this.originalData];
-    console.log(this.originalData);
   }
 
   async getValueTrabajos() {
     this.trabajos = [];
-    const dataTrabajos: any = [];
+
+    const dataTrabajos: any[] = [];
     const collRef = await this.db.asyncCollOrderBy('trabajos', 'nombre', 'asc');
-    collRef.forEach((trabajo) => dataTrabajos.push(trabajo.data()));
-    for (const doc of dataTrabajos) {
-      this.trabajos.push(doc.nombre);
+    collRef.forEach((doc) => dataTrabajos.push(doc.data()));
+
+    // 🔤 Normalizar para comparar: quitar acentos, minúsculas, trim
+    const normalizar = (texto: string): string =>
+      texto
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+
+    // ✍️ Capitalizar cada palabra (Ej: "limpieza dental" → "Limpieza Dental")
+    const capitalizar = (texto: string): string =>
+      texto
+        .toLowerCase()
+        .split(" ")
+        .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+        .join(" ");
+
+    // 🧹 Eliminar duplicados con un Map
+    const mapaUnicos = new Map<string, string>();
+    for (const item of dataTrabajos) {
+      const original = item.nombre || '';
+      const clave = normalizar(original);
+      if (!mapaUnicos.has(clave)) {
+        mapaUnicos.set(clave, original.trim());
+      }
     }
-    this.trabajosFilter = this.trabajos;
+
+    const resultadoFinal = Array.from(mapaUnicos.values()).map(capitalizar);
+
+    // 🔢 Ordenar por número si hay, si no alfabéticamente
+    const ordenadas = resultadoFinal.sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ""), 10);
+      const numB = parseInt(b.replace(/\D/g, ""), 10);
+
+      if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
+      return a.localeCompare(b);
+    });
+
+    this.trabajos = ordenadas;
+    this.trabajosFilter = [...ordenadas];
   }
 
   async getValueTonos() {
     this.tonos = [];
-    const dataTonos: any = [];
+
+    const dataTonos: any[] = [];
     const collRef = await this.db.asyncCollOrderBy('tonos', 'nombre', 'asc');
-    collRef.forEach((tono) => dataTonos.push(tono.data()));
-    for (const doc of dataTonos) {
-      this.tonos.push(doc.nombre);
+    collRef.forEach((doc) => dataTonos.push(doc.data()));
+
+    // 🔤 Normaliza: quita acentos, pasa a minúsculas, recorta espacios
+    const normalizar = (texto: string): string =>
+      texto
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+
+    // 🧹 Eliminar duplicados basados en versión sin acentos
+    const mapaUnicos = new Map<string, string>();
+    for (const item of dataTonos) {
+      const original = item.nombre || '';
+      const clave = normalizar(original);
+      if (!mapaUnicos.has(clave)) {
+        mapaUnicos.set(clave, original.trim());
+      }
     }
-    this.tonosFilter = this.tonos;
+
+    // 🔠 Convertir a MAYÚSCULAS como lo pediste
+    const resultadoFinal = Array.from(mapaUnicos.values()).map((str) =>
+      str.toUpperCase()
+    );
+
+    // 🔢 Ordenar por número si hay, si no alfabéticamente
+    const ordenadas = resultadoFinal.sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ""), 10);
+      const numB = parseInt(b.replace(/\D/g, ""), 10);
+
+      if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
+      return a.localeCompare(b);
+    });
+
+    this.tonos = ordenadas;
+    this.tonosFilter = [...ordenadas];
   }
 
   async getValueConsultorios() {
     this.consultorios = [];
-    const dataConsultorios: any = [];
-    const collRef = await this.db.asyncCollOrderBy(
-      'consultorios',
-      'nombre',
-      'asc'
-    );
-    collRef.forEach((consultorios) =>
-      dataConsultorios.push(consultorios.data())
-    );
-    for (const doc of dataConsultorios) {
-      this.consultorios.push(doc.nombre);
+
+    const dataConsultorios: any[] = [];
+    const collRef = await this.db.asyncCollOrderBy('consultorios', 'nombre', 'asc');
+    collRef.forEach((doc) => dataConsultorios.push(doc.data()));
+
+    // Función para limpiar (quita acentos, espacios, minúsculas)
+    const normalizar = (texto: string): string =>
+      texto
+        .normalize("NFD") // separa letras acentuadas
+        .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
+        .trim()
+        .toLowerCase();
+
+    // Mapear y eliminar duplicados usando clave normalizada
+    const mapaUnicos = new Map<string, string>();
+
+    for (const item of dataConsultorios) {
+      const original = item.nombre || '';
+      const clave = normalizar(original);
+      if (!mapaUnicos.has(clave)) {
+        mapaUnicos.set(clave, original.trim());
+      }
     }
-    this.consultoriosFilter = this.consultorios;
+
+    // Capitalizar la primera letra de cada palabra (ej: "La Merced")
+    const capitalizar = (str: string): string =>
+      str
+        .toLowerCase()
+        .split(' ')
+        .map((palabra) => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+        .join(' ');
+
+    const resultadoFinal = Array.from(mapaUnicos.values()).map(capitalizar);
+
+    // Ordenar por número si existe, si no por nombre
+    const ordenadas = resultadoFinal.sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ""), 10);
+      const numB = parseInt(b.replace(/\D/g, ""), 10);
+
+      if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
+      return a.localeCompare(b);
+    });
+
+    this.consultorios = ordenadas;
+    this.consultoriosFilter = [...ordenadas];
   }
+
 
   async getValueMateriales() {
     this.materiales = [];
-    const dataMateriales: any = [];
-    const collRef = await this.db.asyncCollOrderBy(
-      'materiales',
-      'nombre',
-      'asc'
-    );
+
+    const dataMateriales: any[] = [];
+    const collRef = await this.db.asyncCollOrderBy('materiales', 'nombre', 'asc');
     collRef.forEach((material) => dataMateriales.push(material.data()));
-    for (const doc of dataMateriales) {
-      this.materiales.push(doc.nombre);
+
+    // 🔧 Función para limpiar: quita acentos, minúsculas, trim
+    const normalizar = (texto: string): string =>
+      texto
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+
+    // 🧹 Paso 1: quitar duplicados con Set usando versión normalizada
+    const mapaUnicos = new Map<string, string>(); // clave: limpio, valor: original
+
+    for (const material of dataMateriales) {
+      const nombreOriginal = material.nombre || '';
+      const claveNormalizada = normalizar(nombreOriginal);
+      if (!mapaUnicos.has(claveNormalizada)) {
+        mapaUnicos.set(claveNormalizada, nombreOriginal.trim());
+      }
     }
-    this.materialesFilter = this.materiales;
+
+    // ✍️ Paso 2: capitalizar correctamente (solo la primera letra)
+    const resultadoFinal = Array.from(mapaUnicos.values()).map((str) =>
+      str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+    );
+
+    // 📊 Paso 3: ordenar (por número si hay, si no alfabético)
+    const ordenadas = resultadoFinal.sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ""), 10);
+      const numB = parseInt(b.replace(/\D/g, ""), 10);
+
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return numB - numA; // mayor a menor si tienen número
+      }
+
+      return a.localeCompare(b); // si no, orden alfabético
+    });
+
+    this.materiales = ordenadas;
+    this.materialesFilter = [...ordenadas];
   }
 
   validarId(id: string) {

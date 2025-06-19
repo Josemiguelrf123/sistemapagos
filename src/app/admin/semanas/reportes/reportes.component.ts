@@ -150,6 +150,44 @@ export class ReportesComponent implements OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
+  valoresUnicos(data: any, type: string) {
+    const mapaUnicos = new Map<string, string>();
+    const capitalizar = (str: string): string =>
+      str
+        .toLowerCase()
+        .split(' ')
+        .map((palabra) => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+        .join(' ');
+
+    const normalizar = (texto: string): string =>
+      texto
+        .normalize("NFD") // separa letras acentuadas
+        .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
+        .trim()
+        .toLowerCase();
+
+    for (const item of data) {
+      const original = item[type] || '';
+      if (original === '') continue
+      const clave = normalizar(original);
+      if (!mapaUnicos.has(clave)) {
+        mapaUnicos.set(clave, original.trim());
+      }
+    }
+
+
+    const resultadoFinal = Array.from(mapaUnicos.values()).map(capitalizar);
+    const ordenadas = resultadoFinal.sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ""), 10);
+      const numB = parseInt(b.replace(/\D/g, ""), 10);
+
+      if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
+      return a.localeCompare(b);
+    });
+
+    return ordenadas
+  }
+
   getPagos() {
     const query = this.db.getCollOrderBy('pagos', 'semana', 'desc');
     this.subscriptions.add(
@@ -164,18 +202,18 @@ export class ReportesComponent implements OnDestroy {
           }
           this.pagos = pagos;
           this.pagosFilter = this.pagos;
-
-          // Extraer opciones únicas para los filtros
-          this.consultorios = [...new Set(pagos.map((p: any) => p.consultorio))];
-          this.semanas = [...new Set(pagos.map((p: any) => p.semana))].sort((a: any, b: any) => {
-            // Ordenar semanas de más reciente a más antigua
-            const numA = parseInt(a.replace('semana ', ''));
-            const numB = parseInt(b.replace('semana ', ''));
-            return numB - numA;
-          });
-          this.tonos = [...new Set(pagos.map((p: any) => p.tono).filter((t: any) => t))];
-          this.materiales = [...new Set(pagos.map((p: any) => p.material).filter((m: any) => m))];
-
+          this.consultorios = this.valoresUnicos(pagos, 'consultorio');
+          this.semanas = this.valoresUnicos(pagos, 'semana');
+          this.tonos = this.valoresUnicos(pagos, 'tono');
+          this.materiales = this.valoresUnicos(pagos, 'material');
+          // this.semanas = [...new Set(pagos.map((p: any) => p.semana))].sort((a: any, b: any) => {
+          //   // Ordenar semanas de más reciente a más antigua
+          //   const numA = parseInt(a.replace('semana ', ''));
+          //   const numB = parseInt(b.replace('semana ', ''));
+          //   return numB - numA;
+          // });
+          // this.tonos = [...new Set(pagos.map((p: any) => p.tono).filter((t: any) => t))];
+          // this.materiales = [...new Set(pagos.map((p: any) => p.material).filter((m: any) => m))];
           this.setPagination(this.pagos);
         },
         error: (err: any) => console.log(err),
@@ -199,27 +237,40 @@ export class ReportesComponent implements OnDestroy {
     this.materialControl.valueChanges.subscribe(() => this.applyFilters());
   }
 
+  normalizarTexto(texto: string): string {
+    return texto
+      .normalize('NFD') // Separa los caracteres base de sus acentos
+      .replace(/[\u0300-\u036f]/g, '') // Elimina los diacríticos
+      .toLowerCase();
+  }
+
   applyFilters() {
     let filteredData = [...this.pagosFilter];
 
     // Aplicar filtro de búsqueda general
-    const searchTerm = this.searchControl.value?.toLowerCase() || '';
+    const searchTerm = this.normalizarTexto(this.searchControl.value || '');
     if (searchTerm) {
       filteredData = filteredData.filter((pago: any) => (
-        pago.noContrato?.toLowerCase().includes(searchTerm) ||
-        (pago.trabajo?.toLowerCase().includes(searchTerm)) ||
-        (pago.consultorio?.toLowerCase().includes(searchTerm)) ||
-        (pago.material?.toLowerCase().includes(searchTerm))
+        this.normalizarTexto(pago.noContrato || '').includes(searchTerm) ||
+        this.normalizarTexto(pago.trabajo || '').includes(searchTerm) ||
+        this.normalizarTexto(pago.consultorio || '').includes(searchTerm) ||
+        this.normalizarTexto(pago.material || '').includes(searchTerm)
       ))
     }
 
     // Aplicar filtros específicos
     if (this.consultorioControl.value) {
-      filteredData = filteredData.filter(pago => pago.consultorio === this.consultorioControl.value);
+      const searchTerm = this.normalizarTexto(this.consultorioControl.value);
+      filteredData = filteredData.filter(pago =>
+        this.normalizarTexto(pago.consultorio || '').includes(searchTerm)
+      );
     }
 
     if (this.semanaControl.value) {
-      filteredData = filteredData.filter(pago => pago.semana === this.semanaControl.value);
+      const searchTerm = this.normalizarTexto(this.semanaControl.value);
+      filteredData = filteredData.filter(pago =>
+        this.normalizarTexto(pago.semana || '').includes(searchTerm)
+      );
     }
 
     if (this.estadoControl.value) {
@@ -236,12 +287,18 @@ export class ReportesComponent implements OnDestroy {
 
     // Filtro por tono
     if (this.tonoControl.value) {
-      filteredData = filteredData.filter(pago => pago.tono === this.tonoControl.value);
+      const searchTerm = this.normalizarTexto(this.tonoControl.value);
+      filteredData = filteredData.filter(pago =>
+        this.normalizarTexto(pago.tono || '').includes(searchTerm)
+      );
     }
 
     // Filtro por material
     if (this.materialControl.value) {
-      filteredData = filteredData.filter(pago => pago.material === this.materialControl.value);
+      const searchTerm = this.normalizarTexto(this.materialControl.value);
+      filteredData = filteredData.filter(pago =>
+        this.normalizarTexto(pago.material || '').includes(searchTerm)
+      );
     }
 
     // Filtro por fecha de registro
@@ -330,17 +387,17 @@ export class ReportesComponent implements OnDestroy {
   // En tu componente
   generatePDF() {
     const pagosFilter = this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0)
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
 
     // Configuración del documento
     doc.setFont('helvetica');
     doc.setFontSize(18);
     doc.setTextColor(40, 40, 40);
-    doc.text('Reporte de Trabajos', 105, 15, { align: 'center' });
+    doc.text('Reporte de Trabajos', 148.5, 15, { align: 'center' });
 
     // Datos para la tabla
     const headers = [
-      ['Semana', 'No. Contrato', 'Consultorio', 'Trabajo', 'Total Cobrado']
+      ['Semana', 'No. Contrato', 'Consultorio', 'Trabajo', 'Placa Base', 'Urgente', 'Total Cobrado']
     ];
 
     const body = pagosFilter.map(pago => [
@@ -348,6 +405,8 @@ export class ReportesComponent implements OnDestroy {
       pago.noContrato || 'N/A',
       pago.consultorio || 'N/A',
       pago.trabajo || 'N/A',
+      pago.placaBase || 'N/A',
+      pago.urgente || 'N/A',
       `$${(+pago.totalPorCobrar).toLocaleString('es-MX', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
@@ -384,7 +443,9 @@ export class ReportesComponent implements OnDestroy {
         1: { cellWidth: 25, halign: 'center' },
         2: { cellWidth: 35 },
         3: { cellWidth: 'auto' },
-        4: { cellWidth: 30, halign: 'right' }
+        4: { cellWidth: 25, halign: 'center' },
+        5: { cellWidth: 25, halign: 'center' },
+        6: { cellWidth: 30, halign: 'center' }
       }
     });
 
@@ -406,14 +467,13 @@ export class ReportesComponent implements OnDestroy {
     // Crear el texto para compartir
     const pagosFilter = this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0)
     let shareText = '📋 *Reporte de Trabajos* 📋\n\n';
-    shareText += `📅 Generado el: ${new Date().toLocaleDateString()}\n\n`;
     shareText += '--------------------------------\n\n';
     // Agregar cada trabajo al texto
     pagosFilter.forEach((pago, index) => {
       shareText += `*Semana*: ${pago.semana || 'N/A'}\n`;
       shareText += `*No. Contrato*: ${pago.noContrato || 'N/A'}\n`;
       shareText += `*Consultorio*: ${pago.consultorio || 'N/A'}\n`;
-      shareText += `*Trabajo*: ${pago.trabajo || 'N/A'}\n`;
+      shareText += `*Trabajo*: ${pago.trabajo || 'N/A'} ${pago.placaBase.toLowerCase() === 'si' ? ', con placa base' : ''} ${pago.urgente.toLowerCase() === 'si' ? 'y fue urgente' : ''}\n`;
       shareText += `*Total Cobrado*: $${(+pago.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n`;
 
       if (index < pagosFilter.length - 1) {
@@ -424,7 +484,11 @@ export class ReportesComponent implements OnDestroy {
     // Total general
     const totalGeneral = pagosFilter.reduce((sum, pago) => sum + (+pago.totalPorCobrar || 0), 0);
     shareText += '\n--------------------------------\n';
-    shareText += `*TOTAL GENERAL COBRADO*: $${totalGeneral.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n`;
+    const totalFormatted = totalGeneral
+      .toLocaleString('es-MX', { minimumFractionDigits: 2 })
+      .replace(/,/g, ''); // elimina las comas
+
+    shareText += `*TOTAL GENERAL: $${totalFormatted}*\n`;
 
     // Codificar el texto para URL de WhatsApp
     const encodedText = encodeURIComponent(shareText);

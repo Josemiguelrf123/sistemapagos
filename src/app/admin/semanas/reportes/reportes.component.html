@@ -23,7 +23,7 @@
     <div class="row">
       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
         <!-- Filtros para desktop -->
-        <div class="card d-none d-md-block mb-3">
+        <div class="card mb-3 d-none d-xl-block">
           <div class="card-body">
             <div class="row">
               <div class="col-md-12 mb-3">
@@ -35,7 +35,7 @@
               </div>
             </div>
             <div class="row">
-              <div class="col-md-2 mb-2">
+              <div class="col-md-4 mb-2">
                 <mat-form-field appearance="outline" class="w-100">
                   <mat-label>Consultorio</mat-label>
                   <mat-select [formControl]="consultorioControl">
@@ -46,7 +46,7 @@
                   </mat-select>
                 </mat-form-field>
               </div>
-              <div class="col-md-2 mb-2">
+              <div class="col-md-4 mb-2">
                 <mat-form-field appearance="outline" class="w-100">
                   <mat-label>Semana</mat-label>
                   <mat-select [formControl]="semanaControl">
@@ -57,7 +57,7 @@
                   </mat-select>
                 </mat-form-field>
               </div>
-              <div class="col-md-2 mb-2">
+              <div class="col-md-4 mb-2">
                 <mat-form-field appearance="outline" class="w-100">
                   <mat-label>Estado</mat-label>
                   <mat-select [formControl]="estadoControl">
@@ -68,7 +68,7 @@
                   </mat-select>
                 </mat-form-field>
               </div>
-              <div class="col-md-2 mb-2">
+              <div class="col-md-4 mb-2">
                 <mat-form-field appearance="outline" class="w-100">
                   <mat-label>Pagado</mat-label>
                   <mat-select [formControl]="pagadoControl">
@@ -79,7 +79,7 @@
                   </mat-select>
                 </mat-form-field>
               </div>
-              <div class="col-md-2 mb-2">
+              <div class="col-md-4 mb-2">
                 <mat-form-field appearance="outline" class="w-100">
                   <mat-label>Urgente</mat-label>
                   <mat-select [formControl]="urgenteControl">
@@ -90,7 +90,7 @@
                   </mat-select>
                 </mat-form-field>
               </div>
-              <div class="col-md-2 mb-2">
+              <div class="col-md-4 mb-2">
                 <mat-form-field appearance="outline" class="w-100">
                   <mat-label>Tono</mat-label>
                   <mat-select [formControl]="tonoControl">
@@ -105,7 +105,7 @@
 
             <div class="row">
 
-              <div class="col-md-2 mb-2">
+              <div class="col-md-4 mb-2">
                 <mat-form-field appearance="outline" class="w-100">
                   <mat-label>Material</mat-label>
                   <mat-select [formControl]="materialControl">
@@ -117,7 +117,7 @@
                 </mat-form-field>
               </div>
 
-              <div class="col-md-3 mb-2">
+              <div class="col-md-4 mb-2">
                 <mat-form-field appearance="outline" class="w-100">
                   <mat-label>Fecha Registro (inicio)</mat-label>
                   <input matInput [matDatepicker]="pickerRegistroInicio" [formControl]="fechaRegistroInicioControl">
@@ -126,7 +126,7 @@
                 </mat-form-field>
               </div>
 
-              <div class="col-md-3 mb-2">
+              <div class="col-md-4 mb-2">
                 <mat-form-field appearance="outline" class="w-100">
                   <mat-label>Fecha Registro (fin)</mat-label>
                   <input matInput [matDatepicker]="pickerRegistroFin" [formControl]="fechaRegistroFinControl">
@@ -135,7 +135,7 @@
                 </mat-form-field>
               </div>
 
-              <div class="col-md-3 mb-2">
+              <div class="col-md-4 mb-2">
                 <mat-form-field appearance="outline" class="w-100">
                   <mat-label>Fecha Entrega (inicio)</mat-label>
                   <input matInput [matDatepicker]="pickerEntregaInicio" [formControl]="fechaEntregaInicioControl">
@@ -144,7 +144,7 @@
                 </mat-form-field>
               </div>
 
-              <div class="col-md-3 mb-2">
+              <div class="col-md-4 mb-2">
                 <mat-form-field appearance="outline" class="w-100">
                   <mat-label>Fecha Entrega (fin)</mat-label>
                   <input matInput [matDatepicker]="pickerEntregaFin" [formControl]="fechaEntregaFinControl">
@@ -162,7 +162,7 @@
         </div>
 
         <!-- Filtros para móvil -->
-        <div class="d-md-none mb-3">
+        <div class="d-xl-none mb-3">
           <mat-expansion-panel [(expanded)]="panelOpenState">
             <mat-expansion-panel-header>
               <mat-panel-title>
@@ -171,116 +171,129 @@
               </mat-panel-title>
             </mat-expansion-panel-header>
 
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Buscar</mat-label>
-              <input matInput [formControl]="searchControl" placeholder="No. contrato, trabajo, consultorio...">
-              <mat-icon matSuffix>search</mat-icon>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Consultorio</mat-label>
-              <mat-select [formControl]="consultorioControl">
-                <mat-option value="">Todos</mat-option>
-                <mat-option *ngFor="let consultorio of consultorios" [value]="consultorio">
-                  {{consultorio}}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Semana</mat-label>
-              <mat-select [formControl]="semanaControl">
-                <mat-option value="">Todas</mat-option>
-                <mat-option *ngFor="let semana of semanas" [value]="semana">
-                  {{semana}}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Estado</mat-label>
-              <mat-select [formControl]="estadoControl">
-                <mat-option value="">Todos</mat-option>
-                <mat-option *ngFor="let estado of estados" [value]="estado">
-                  {{estado | titlecase}}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Pagado</mat-label>
-              <mat-select [formControl]="pagadoControl">
-                <mat-option value="">Todos</mat-option>
-                <mat-option *ngFor="let option of pagadoOptions" [value]="option">
-                  {{option}}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Urgente</mat-label>
-              <mat-select [formControl]="urgenteControl">
-                <mat-option value="">Todos</mat-option>
-                <mat-option *ngFor="let option of urgenteOptions" [value]="option">
-                  {{option}}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Tono</mat-label>
-              <mat-select [formControl]="tonoControl">
-                <mat-option value="">Todos</mat-option>
-                <mat-option *ngFor="let tono of tonos" [value]="tono">
-                  {{tono}}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Material</mat-label>
-              <mat-select [formControl]="materialControl">
-                <mat-option value="">Todos</mat-option>
-                <mat-option *ngFor="let material of materiales" [value]="material">
-                  {{material}}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Fecha Registro (inicio)</mat-label>
-              <input matInput [matDatepicker]="pickerRegistroInicioMobile" [formControl]="fechaRegistroInicioControl">
-              <mat-datepicker-toggle matSuffix [for]="pickerRegistroInicioMobile"></mat-datepicker-toggle>
-              <mat-datepicker #pickerRegistroInicioMobile></mat-datepicker>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Fecha Registro (fin)</mat-label>
-              <input matInput [matDatepicker]="pickerRegistroFinMobile" [formControl]="fechaRegistroFinControl">
-              <mat-datepicker-toggle matSuffix [for]="pickerRegistroFinMobile"></mat-datepicker-toggle>
-              <mat-datepicker #pickerRegistroFinMobile></mat-datepicker>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Fecha Entrega (inicio)</mat-label>
-              <input matInput [matDatepicker]="pickerEntregaInicioMobile" [formControl]="fechaEntregaInicioControl">
-              <mat-datepicker-toggle matSuffix [for]="pickerEntregaInicioMobile"></mat-datepicker-toggle>
-              <mat-datepicker #pickerEntregaInicioMobile></mat-datepicker>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Fecha Entrega (fin)</mat-label>
-              <input matInput [matDatepicker]="pickerEntregaFinMobile" [formControl]="fechaEntregaFinControl">
-              <mat-datepicker-toggle matSuffix [for]="pickerEntregaFinMobile"></mat-datepicker-toggle>
-              <mat-datepicker #pickerEntregaFinMobile></mat-datepicker>
-            </mat-form-field>
-
-            <button mat-stroked-button color="warn" class="w-100" (click)="resetFilters()">
-              <mat-icon>clear</mat-icon> Limpiar filtros
-            </button>
+            <div class="row">
+              <mat-form-field appearance="outline" class="w-100 mb-2">
+                <mat-label>Buscar</mat-label>
+                <input matInput [formControl]="searchControl" placeholder="No. contrato, trabajo, consultorio...">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+              <div class="col-sm-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Consultorio</mat-label>
+                  <mat-select [formControl]="consultorioControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let consultorio of consultorios" [value]="consultorio">
+                      {{consultorio}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-sm-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2 col-sm-3">
+                  <mat-label>Semana</mat-label>
+                  <mat-select [formControl]="semanaControl">
+                    <mat-option value="">Todas</mat-option>
+                    <mat-option *ngFor="let semana of semanas" [value]="semana">
+                      {{semana}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-sm-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2 col-sm-3">
+                  <mat-label>Estado</mat-label>
+                  <mat-select [formControl]="estadoControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let estado of estados" [value]="estado">
+                      {{estado | titlecase}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-sm-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Pagado</mat-label>
+                  <mat-select [formControl]="pagadoControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let option of pagadoOptions" [value]="option">
+                      {{option}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-sm-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Urgente</mat-label>
+                  <mat-select [formControl]="urgenteControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let option of urgenteOptions" [value]="option">
+                      {{option}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-sm-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Tono</mat-label>
+                  <mat-select [formControl]="tonoControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let tono of tonos" [value]="tono">
+                      {{tono}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-sm-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Material</mat-label>
+                  <mat-select [formControl]="materialControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let material of materiales" [value]="material">
+                      {{material}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-sm-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Fecha Registro (inicio)</mat-label>
+                  <input matInput [matDatepicker]="pickerRegistroInicioMobile"
+                    [formControl]="fechaRegistroInicioControl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerRegistroInicioMobile"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerRegistroInicioMobile></mat-datepicker>
+                </mat-form-field>
+              </div>
+              <div class="col-sm-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Fecha Registro (fin)</mat-label>
+                  <input matInput [matDatepicker]="pickerRegistroFinMobile" [formControl]="fechaRegistroFinControl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerRegistroFinMobile"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerRegistroFinMobile></mat-datepicker>
+                </mat-form-field>
+              </div>
+              <div class="col-sm-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Fecha Entrega (inicio)</mat-label>
+                  <input matInput [matDatepicker]="pickerEntregaInicioMobile" [formControl]="fechaEntregaInicioControl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerEntregaInicioMobile"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerEntregaInicioMobile></mat-datepicker>
+                </mat-form-field>
+              </div>
+              <div class="col-sm-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Fecha Entrega (fin)</mat-label>
+                  <input matInput [matDatepicker]="pickerEntregaFinMobile" [formControl]="fechaEntregaFinControl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerEntregaFinMobile"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerEntregaFinMobile></mat-datepicker>
+                </mat-form-field>
+              </div>
+              <div class="col-sm-4"><button mat-stroked-button color="warn" class="w-100" (click)="resetFilters()">
+                  <mat-icon>clear</mat-icon> Limpiar filtros
+                </button></div>
+            </div>
           </mat-expansion-panel>
         </div>
-        <div class="card d-none d-md-block">
+        <div class="card d-none d-xl-block">
           <div class="column-toggle-button d-none d-md-inline-block">
             <button mat-button [matMenuTriggerFor]="columnsMenu">
               <mat-icon>view_column</mat-icon>
@@ -401,7 +414,7 @@
             </div>
           </div>
         </div>
-        <div class="d-md-none">
+        <div class="d-xl-none">
           <div class="row">
             @for (pago of pagos; track pago.id) {
             <div class="col-12 mb-3">
@@ -415,31 +428,53 @@
                 </mat-card-header>
                 <hr>
                 <mat-card-content>
-                  <p><strong>Consultorio:</strong> {{ pago.consultorio }}</p>
-                  <p><strong>Tono:</strong> {{ pago.tono }}</p>
-                  <p><strong>Material:</strong> {{ pago.material }}</p>
-                  <p><strong>Fecha Registro:</strong>
-                    {{ pago.fechaRegistro ? (pago.fechaRegistro.seconds * 1000 | date: 'mediumDate') : '' }}
-                  </p>
-                  <p><strong>Fecha Entrega:</strong>
-                    {{ pago.fechaEntrega ? (pago.fechaEntrega.seconds * 1000 | date: 'mediumDate') : '' }}
-                  </p>
-                  <p><strong>Prueba o Terminada:</strong> {{ pago.pruebaTerminada }}</p>
-                  <p><strong>Urgente:</strong> {{ pago.urgente }}</p>
-                  <p><strong>Placa Base:</strong> {{ pago.placaBase }}</p>
-                  <div class="mt-2">
-                    <p class="fw-semibold text-purple">
-                      <span class="compact-label">Precio Total:</span>
-                      ${{ (+pago.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
-                    </p>
-                    <p class="fw-semibold text-success">
-                      <span class="compact-label">Total por cobrar:</span>
-                      ${{ (+pago.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
-                    </p>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p><strong>Consultorio:</strong> {{ pago.consultorio }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Tono:</strong> {{ pago.tono }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Material:</strong> {{ pago.material }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Fecha Registro:</strong>
+                        {{ pago.fechaRegistro ? (pago.fechaRegistro.seconds * 1000 | date: 'mediumDate') : '' }}
+                      </p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Fecha Entrega:</strong>
+                        {{ pago.fechaEntrega ? (pago.fechaEntrega.seconds * 1000 | date: 'mediumDate') : '' }}
+                      </p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Prueba o Terminada:</strong> {{ pago.pruebaTerminada }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Urgente:</strong> {{ pago.urgente }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Placa Base:</strong> {{ pago.placaBase }}</p>
+                    </div>
+                    <div class="col-sm-4">
+                      <p class="fw-semibold text-purple">
+                        <span class="compact-label">Precio Total:</span>
+                        ${{ (+pago.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                      </p>
+                    </div>
+                    <div class="col-sm-4">
+                      <p class="fw-semibold text-success">
+                        <span class="compact-label">Total por cobrar:</span>
+                        ${{ (+pago.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                      </p>
+                    </div>
+                    @if (pago.observaciones !== '') {
+                    <div class="col-sm-12">
+                      <p class="mt-2"><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
+                    </div>
+                    }
                   </div>
-                  @if (pago.observaciones !== '') {
-                  <p class="mt-2"><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
-                  }
                 </mat-card-content>
               </mat-card>
             </div>

@@ -105,6 +105,7 @@ export class ListadoSemanasComponent implements OnDestroy {
   mostrarModal = false;
   selectedItem!: Pago;
   selectedItem1!: Pago;
+  totalGeneral = 0;
 
   constructor(
     private db: FirestoreService,
@@ -142,6 +143,10 @@ export class ListadoSemanasComponent implements OnDestroy {
           this.semanaSelect = ultimaSemana;
           this.pagos = this.pagosTodos.filter((res: Pago) => res.semana === ultimaSemana);
           this.pagosFilter = this.pagos;
+          this.totalGeneral = this.pagos.reduce(
+            (sum: any, value: any) => sum + Number(value.totalPorCobrar),
+            0
+          );
           this.setPagination(this.pagos);
         },
         error: (err: any) => console.log(err),
@@ -155,10 +160,11 @@ export class ListadoSemanasComponent implements OnDestroy {
       this.setPagination(this.pagos);
       return;
     }
+
     this.pagos = this.filterSvc.filterListPedidos(
       event,
       [...this.pagosFilter],
-      ['noContrato', 'consultorio', 'trabajo', 'material']
+      ['noContrato', 'consultorio', 'trabajo', 'material', 'tono']
     );
     this.setPagination(this.pagos);
   }
@@ -271,6 +277,10 @@ export class ListadoSemanasComponent implements OnDestroy {
     this.semanaSelect = selectedWeek;
     this.pagos = this.pagosTodos.filter((res: Pago) => res.semana === selectedWeek);
     this.pagosFilter = this.pagos;
+    this.totalGeneral = this.pagos.reduce(
+      (sum: any, value: any) => sum + Number(value.totalPorCobrar),
+      0
+    );
     this.setPagination(this.pagos);
   }
 
@@ -304,13 +314,15 @@ export class ListadoSemanasComponent implements OnDestroy {
 
     // Datos para la tabla
     const headers = [
-      ['No. Contrato', 'Consultorio', 'Trabajo', 'Total a Cobrar']
+      ['No. Contrato', 'Consultorio', 'Trabajo', 'Placa Base', 'Urgente', 'Total a Cobrar']
     ];
 
     const body = pagosFilter.map(pago => [
       pago.noContrato || 'N/A',
       pago.consultorio || 'N/A',
       pago.trabajo || 'N/A',
+      pago.placaBase || 'N/A',
+      pago.urgente || 'N/A',
       `$${(+pago.totalPorCobrar).toLocaleString('es-MX', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
@@ -346,7 +358,9 @@ export class ListadoSemanasComponent implements OnDestroy {
         0: { cellWidth: 25, halign: 'center' },
         1: { cellWidth: 35 },
         2: { cellWidth: 'auto' },
-        3: { cellWidth: 30, halign: 'right' }
+        3: { cellWidth: 25, halign: 'center' },
+        4: { cellWidth: 25, halign: 'center' },
+        5: { cellWidth: 30, halign: 'center' }
       }
     });
 
@@ -368,13 +382,12 @@ export class ListadoSemanasComponent implements OnDestroy {
     // Crear el texto para compartir
     const pagosFilter = this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0)
     let shareText = '📋 *Reporte de Trabajos* 📋\n\n';
-    shareText += `📅 Generado el: ${new Date().toLocaleDateString()}\n\n`;
     shareText += '--------------------------------\n\n';
     // Agregar cada trabajo al texto
     pagosFilter.forEach((pago, index) => {
       shareText += `*No. Contrato*: ${pago.noContrato || 'N/A'}\n`;
       shareText += `*Consultorio*: ${pago.consultorio || 'N/A'}\n`;
-      shareText += `*Trabajo*: ${pago.trabajo || 'N/A'}\n`;
+      shareText += `*Trabajo*: ${pago.trabajo || 'N/A'} ${pago.placaBase.toLowerCase() === 'si' ? ', con placa base' : ''} ${pago.urgente.toLowerCase() === 'si' ? 'y fue urgente' : ''}\n`;
       shareText += `*Total a Cobrar*: $${(+pago.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n`;
 
       if (index < pagosFilter.length - 1) {
@@ -385,7 +398,11 @@ export class ListadoSemanasComponent implements OnDestroy {
     // Total general
     const totalGeneral = pagosFilter.reduce((sum, pago) => sum + (+pago.totalPorCobrar || 0), 0);
     shareText += '\n--------------------------------\n';
-    shareText += `*TOTAL GENERAL*: $${totalGeneral.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n`;
+    const totalFormatted = totalGeneral
+      .toLocaleString('es-MX', { minimumFractionDigits: 2 })
+      .replace(/,/g, ''); // elimina las comas
+
+    shareText += `*TOTAL GENERAL: $${totalFormatted}*\n`;
 
     // Codificar el texto para URL de WhatsApp
     const encodedText = encodeURIComponent(shareText);

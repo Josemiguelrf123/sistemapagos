@@ -57,7 +57,7 @@
               </ul>
             </div>
           </div>
-          <div class="column-toggle-button d-none d-md-inline-block">
+          <div class="column-toggle-button d-none d-xl-block">
             <button mat-button [matMenuTriggerFor]="columnsMenu">
               <mat-icon>view_column</mat-icon>
               Selecciona qué columnas quieres mostrar
@@ -74,8 +74,13 @@
             </button>
             }
           </mat-menu>
-          <div class="table-container">
-            <div class="responsive-table-wrapper">
+          <div class="table-container d-none d-xl-block">
+            <div class="col-12" style="text-align: end;padding-right: 30px!important;">
+              <h2 class="h5 m-0">Total: <strong>${{ (totalGeneral ||
+                  0).toLocaleString('es-MX',
+                  {minimumFractionDigits: 2}) }}</strong></h2>
+            </div>
+            <div class="responsive-table-wrapper mt-2">
               @if (dataObs$ | async; as trabajos) {
               <table mat-table [dataSource]="trabajos" matSort class="compact-table">
                 <!-- ID Column -->
@@ -199,8 +204,13 @@
             </div>
           </div>
         </div>
-        <div class="d-md-none">
-          <div class="row">
+        <div class="d-xl-none">
+          <div class="col-12" style="text-align: end;">
+            <h2 class="h5 m-0">Total: <strong>${{ (totalGeneral ||
+                0).toLocaleString('es-MX',
+                {minimumFractionDigits: 2}) }}</strong></h2>
+          </div>
+          <div class="row mt-3">
             @for (pago of pagos; track pago.id) {
             <div class="col-12 mb-3">
               <div class="seguimiento-banner" *ngIf="pago.trabajoAnterior">
@@ -225,31 +235,53 @@
                 </mat-card-header>
                 <hr>
                 <mat-card-content>
-                  <p><strong>Consultorio:</strong> {{ pago.consultorio }}</p>
-                  <p><strong>Tono:</strong> {{ pago.tono }}</p>
-                  <p><strong>Material:</strong> {{ pago.material }}</p>
-                  <p><strong>Fecha Registro:</strong>
-                    {{ pago.fechaRegistro ? (pago.fechaRegistro.seconds * 1000 | date: 'mediumDate') : '' }}
-                  </p>
-                  <p><strong>Fecha Entrega:</strong>
-                    {{ pago.fechaEntrega ? (pago.fechaEntrega.seconds * 1000 | date: 'mediumDate') : '' }}
-                  </p>
-                  <p><strong>Prueba o Terminada:</strong> {{ pago.pruebaTerminada }}</p>
-                  <p><strong>Urgente:</strong> {{ pago.urgente }}</p>
-                  <p><strong>Placa Base:</strong> {{ pago.placaBase }}</p>
-                  <div class="mt-2">
-                    <p class="fw-semibold text-purple">
-                      <span class="compact-label">Precio Total:</span>
-                      ${{ (+pago.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
-                    </p>
-                    <p class="fw-semibold text-success">
-                      <span class="compact-label">Total por cobrar:</span>
-                      ${{ (+pago.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
-                    </p>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p><strong>Consultorio:</strong> {{ pago.consultorio }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Tono:</strong> {{ pago.tono }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Material:</strong> {{ pago.material }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Fecha Registro:</strong>
+                        {{ pago.fechaRegistro ? (pago.fechaRegistro.seconds * 1000 | date: 'mediumDate') : '' }}
+                      </p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Fecha Entrega:</strong>
+                        {{ pago.fechaEntrega ? (pago.fechaEntrega.seconds * 1000 | date: 'mediumDate') : '' }}
+                      </p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Prueba o Terminada:</strong> {{ pago.pruebaTerminada }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Urgente:</strong> {{ pago.urgente }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Placa Base:</strong> {{ pago.placaBase }}</p>
+                    </div>
+                    <div class="col-sm-4">
+                      <p class="fw-semibold text-purple">
+                        <span class="compact-label">Precio Total:</span>
+                        ${{ (+pago.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                      </p>
+                    </div>
+                    <div class="col-sm-4">
+                      <p class="fw-semibold text-success">
+                        <span class="compact-label">Total por cobrar:</span>
+                        ${{ (+pago.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                      </p>
+                    </div>
+                    @if (pago.observaciones !== '') {
+                    <div class="col-sm-12">
+                      <p class="mt-2"><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
+                    </div>
+                    }
                   </div>
-                  @if (pago.observaciones !== '') {
-                  <p class="mt-2"><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
-                  }
                 </mat-card-content>
                 <mat-card-actions class="d-flex gap-2" style="align-self: center;">
                   <button mat-icon-button color="primary" matTooltip="Editar" (click)="iraEditar(pago.id)">

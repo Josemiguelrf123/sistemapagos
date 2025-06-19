@@ -97,7 +97,7 @@
                       (input)="_filterProvMateriales($any($event.target).value)">
                     <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>calendar_today</mat-icon>
                     <mat-autocomplete autoActiveFirstOption #autoProvSemana="matAutocomplete">
-                      @for (semana of semanasTodasFilter; track semana) {
+                      @for (semana of semanasFilter; track semana) {
                       <mat-option [value]="semana">{{ semana }}</mat-option>
                       }
                     </mat-autocomplete>
@@ -295,7 +295,7 @@
         </mat-form-field>
 
         <!-- Vista para pantallas grandes (tabla) -->
-        <div class="d-none d-md-block">
+        <div class="d-none d-xl-block">
           <table mat-table [dataSource]="filteredData" class="mat-elevation-z8 w-100">
             <!-- Columna Selección -->
             <ng-container matColumnDef="select">
@@ -305,6 +305,12 @@
                   (change)="onItemSelected(element)">
                 </mat-radio-button>
               </td>
+            </ng-container>
+
+            <!-- Columna No. Contrato -->
+            <ng-container matColumnDef="semana">
+              <th mat-header-cell *matHeaderCellDef>Semana</th>
+              <td mat-cell *matCellDef="let element">{{element.semana}}</td>
             </ng-container>
 
             <!-- Columna No. Contrato -->
@@ -380,7 +386,7 @@
         </div>
 
         <!-- Vista para móviles (cards) -->
-        <div class="d-md-none">
+        <div class="d-xl-none">
           <div class="row">
             @for (item of filteredData; track item) {
             <div class="col-12 mb-3">
@@ -395,32 +401,45 @@
                 </mat-card-header>
                 <hr>
                 <mat-card-content>
-                  <p><strong>Consultorio:</strong> {{ item.consultorio }}</p>
-                  <p><strong>Material:</strong> {{ item.material }}</p>
-                  <p><strong>Tono:</strong> {{ item.tono }}</p>
-                  <p><strong>Fecha Registro:</strong>
-                    {{ item.fechaRegistro ? (item.fechaRegistro.seconds * 1000 | date: 'mediumDate') : '' }}
-                  </p>
-                  <p><strong>Fecha Entrega:</strong>
-                    {{ item.fechaEntrega ? (item.fechaEntrega.seconds * 1000 | date: 'mediumDate') : '' }}
-                  </p>
-
-                  <div class="mt-2">
-                    <p class="fw-semibold text-purple">
-                      <span class="compact-label">Precio Total:</span>
-                      ${{ (+item.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
-                    </p>
-                    <p class="fw-semibold text-success">
-                      <span class="compact-label">Cobrado:</span>
-                      ${{ (+item.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
-                    </p>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p><strong>Consultorio:</strong> {{ item.consultorio }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Material:</strong> {{ item.material }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Tono:</strong> {{ item.tono }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Fecha Registro:</strong>
+                        {{ item.fechaRegistro ? (item.fechaRegistro.seconds * 1000 | date: 'mediumDate') : '' }}
+                      </p>
+                    </div>
+                    <div class="col-sm-3">
+                      <p><strong>Fecha Entrega:</strong>
+                        {{ item.fechaEntrega ? (item.fechaEntrega.seconds * 1000 | date: 'mediumDate') : '' }}
+                      </p>
+                    </div>
+                    <div class="col-sm-4">
+                      <p class="fw-semibold text-purple">
+                        <span class="compact-label">Precio Total:</span>
+                        ${{ (+item.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                      </p>
+                    </div>
+                    <div class="col-sm-4">
+                      <p class="fw-semibold text-success">
+                        <span class="compact-label">Cobrado:</span>
+                        ${{ (+item.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                      </p>
+                    </div>
+                    @if (item.observaciones !== '') {
+                    <div class="col-sm-12">
+                      <p class="mt-2"><strong>Observaciones:</strong> {{ item.observaciones }}</p>
+                    </div>
+                    }
                   </div>
-
-                  @if (item.observaciones !== '') {
-                  <p class="mt-2"><strong>Observaciones:</strong> {{ item.observaciones }}</p>
-                  }
                 </mat-card-content>
-
                 <mat-card-actions>
                   @if (selectedItem?.id === item.id){
                   <button mat-stroked-button color="accent" class="w-100">

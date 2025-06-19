@@ -49,18 +49,26 @@ export class FilterTableService {
   }
 
   filterListPedidos(event: any, data: any, itemFilters: string[]): any {
-    const val = event.target.value.toLowerCase();
-    const FilteredData = data.filter((item: any): any => {
-      for (let i = 0; i < itemFilters.length; i++) {
-        if (
-          item[itemFilters[i]].toString().toLowerCase().indexOf(val) !== -1 ||
-          !val
-        ) {
-          return true;
-        }
-      }
+    const val = this.normalizeText(event.target.value.toLowerCase());
+
+    if (!val) {
+      return [...data]; // Devuelve copia de los datos originales si no hay valor de búsqueda
+    }
+
+    return data.filter((item: any) => {
+      return itemFilters.some(filter => {
+        const fieldValue = this.normalizeText(item[filter]?.toString().toLowerCase());
+        return fieldValue.includes(val);
+      });
     });
-    return FilteredData;
+  }
+
+  // Función para normalizar texto (quitar acentos y caracteres especiales)
+  private normalizeText(text: string): string {
+    return text
+      .normalize('NFD') // Separa caracteres base de sus acentos
+      .replace(/[\u0300-\u036f]/g, '') // Elimina los diacríticos
+      .replace(/[^a-zA-Z0-9 ]/g, ''); // Opcional: elimina otros caracteres especiales
   }
 
   formatDate(fecha: Date, format?: string): string {
