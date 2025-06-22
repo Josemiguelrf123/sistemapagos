@@ -8,9 +8,6 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { Observable, Subscription } from 'rxjs';
 import { Pago } from '../componentes/pago.model';
 import { FirestoreService } from '@core/service/firestore.service';
-import { Router } from '@angular/router';
-import { ExcelService } from '@core/service/excel.service';
-import { AlertService } from '@core/service/alert.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -138,9 +135,6 @@ export class ReportesComponent implements OnDestroy {
   constructor(
     private db: FirestoreService,
     private _changeDetectorRef: ChangeDetectorRef,
-    private router: Router,
-    private excelService: ExcelService,
-    private alertService: AlertService
   ) {
     this.getPagos();
     this.setupFilterListeners();

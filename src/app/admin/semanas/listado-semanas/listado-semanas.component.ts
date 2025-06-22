@@ -69,6 +69,7 @@ export class ListadoSemanasComponent implements OnDestroy {
   pagosFilter: Pago[] = [];
   dataObs$!: Observable<any>;
   availableColumns = [
+    'partida',
     'noContrato',
     'trabajo',
     'consultorio',
@@ -85,6 +86,7 @@ export class ListadoSemanasComponent implements OnDestroy {
     'actions'
   ];
   displayedColumns = [
+    'partida',
     'noContrato',
     'trabajo',
     'consultorio',
@@ -106,6 +108,8 @@ export class ListadoSemanasComponent implements OnDestroy {
   selectedItem!: Pago;
   selectedItem1!: Pago;
   totalGeneral = 0;
+  totalPartida1 = 0;
+  totalPartida2 = 0;
 
   constructor(
     private db: FirestoreService,
@@ -130,6 +134,7 @@ export class ListadoSemanasComponent implements OnDestroy {
           for (let i = 0; i < pagos.length; i++) {
             pagos[i].trabajoAnterior ||= null;
             pagos[i].trabajoReferencia ||= null;
+            pagos[i].partida ||= 'Partida 1';
           }
           this.pagosTodos = pagos;
           const semanas = this.pagosTodos.map((res: Pago) => res.semana);
@@ -145,6 +150,22 @@ export class ListadoSemanasComponent implements OnDestroy {
           this.pagosFilter = this.pagos;
           this.totalGeneral = this.pagos.reduce(
             (sum: any, value: any) => sum + Number(value.totalPorCobrar),
+            0
+          );
+          this.totalPartida1 = this.pagos.reduce(
+            (sum: number, value: any) => {
+              return value.partida === 'Partida 1'
+                ? sum + Number(value.totalPorCobrar)
+                : sum;
+            },
+            0
+          );
+          this.totalPartida2 = this.pagos.reduce(
+            (sum: number, value: any) => {
+              return value.partida === 'Partida 2'
+                ? sum + Number(value.totalPorCobrar)
+                : sum;
+            },
             0
           );
           this.setPagination(this.pagos);
@@ -300,17 +321,30 @@ export class ListadoSemanasComponent implements OnDestroy {
     this.selectedItem1 = item1;
   }
 
+  selectType(title: string, type: string) {
+    this.alertService.alertSelectType(title, type === 'pdf' ? 'Generar PDF' : 'Compartir').then((result) => {
+      if (result.isConfirmed) {
+        const selected = result.value;
+        console.log(selected);
+        if (type === 'pdf') {
+          this.generatePDF(selected);
+        } else {
+          this.shareViaWhatsApp(selected)
+        }
+      }
+    });
+  }
 
   // En tu componente
-  generatePDF() {
-    const pagosFilter = this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0)
+  generatePDF(select: string) {
+    const pagosFilter = select === '' || select === 'total' ? this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0) :
+      this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0 && res.partida === select)
     const doc = new jsPDF({ orientation: 'landscape' });
-
     // Configuración del documento
     doc.setFont('helvetica');
     doc.setFontSize(18);
     doc.setTextColor(40, 40, 40);
-    doc.text(`Reporte de Trabajos ${this.semanaSelect}`, 148.5, 15, { align: 'center' });
+    doc.text(`Reporte de Trabajos ${this.semanaSelect}${select === '' || select === 'total' ? ' (General)' : " (" + select + ")"}`, 148.5, 15, { align: 'center' });
 
     // Datos para la tabla
     const headers = [
@@ -381,12 +415,13 @@ export class ListadoSemanasComponent implements OnDestroy {
     );
 
     // Guardar PDF
-    doc.save(`reporte_trabajos_${this.semanaSelect}.pdf`);
+    doc.save(`reporte_trabajos_${this.semanaSelect}_${select === '' || select === 'total' ? 'General' : select}.pdf`);
   }
 
-  shareViaWhatsApp() {
+  shareViaWhatsApp(select: string) {
     // Crear el texto para compartir
-    const pagosFilter = this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0)
+    const pagosFilter = select === '' || select === 'total' ? this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0) :
+      this.pagos.filter((res: any) => Number(res.totalPorCobrar || 0) > 0 && res.partida === select)
     let shareText = '📋 *Reporte de Trabajos* 📋\n\n';
     shareText += '--------------------------------\n\n';
     // Agregar cada trabajo al texto

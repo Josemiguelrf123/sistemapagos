@@ -180,7 +180,7 @@ export class AlertService {
       cancelButtonText,
       showLoaderOnConfirm: true,
       preConfirm: (text) => {
-        var validEmail = /^[-\w.%+]{1,64}@(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63}$/i;/\S+@\S+\.\S+/;
+        var validEmail = /^[-\w.%+]{1,64}@(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63}$/i; /\S+@\S+\.\S+/;
         if (text === "") {
           Swal.showValidationMessage(`El campo es requrido`);
         }
@@ -222,8 +222,42 @@ export class AlertService {
     });
   }
 
+  alertSelectType(
+    title = '¿Qué total deseas generar?',
+    title1 = 'Generar PDF'
+  ) {
+    return Swal.fire({
+      title,
+      input: 'select',
+      inputOptions: {
+        'Partida 1': 'Total Partida 1',
+        'Partida 2': 'Total Partida 2',
+        total: 'Total Semana'
+      },
+      inputPlaceholder: 'Selecciona una opción',
+      showCancelButton: true,
+      confirmButtonText: title1,
+      cancelButtonText: 'Cancelar',
+
+      // QUITAMOS los estilos por defecto para poner los custom
+      buttonsStyling: false,
+
+      customClass: {
+        popup: 'modern-swal-popup',
+        title: 'modern-swal-title',
+        confirmButton: 'modern-btn-confirm',
+        cancelButton: 'modern-btn-cancel',
+        input: 'modern-swal-select'
+      },
+
+      inputValidator: (value) => {
+        return !value && 'Debes seleccionar una opción';
+      }
+    });
+  }
+
   toast(
-    msg:any,
+    msg: any,
     panelClass = 'row-green',
     Vposition: MatSnackBarVerticalPosition = 'top',
     Hposition: MatSnackBarHorizontalPosition = 'right'

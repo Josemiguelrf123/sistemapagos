@@ -476,12 +476,19 @@ export class NuevoTrabajoComponent {
     const id = await this.db.getId();
     this.pagosForm.controls['id'].setValue(id);
     const datos: Pago = this.pagosForm.getRawValue();
+    const semanaEncontrada = this.semanasFilter.find(
+      (semana: any) => semana.toLowerCase() === datos.semana.toLowerCase()
+    );
     await this.db.createDoc(
       {
         ...this.pagosForm.getRawValue(),
         createAt: new Date(),
         trabajoAnterior: this.selectedItem,
         idTrabajoAnterior: this.selectedItem ? this.selectedItem.id : '',
+        semana: semanaEncontrada ? semanaEncontrada : datos.semana,
+        urgente: datos.urgente === '' ? 'NO' : datos.urgente,
+        placaBase: datos.placaBase === '' ? 'NO' : datos.placaBase,
+        pagado: datos.pagado === '' ? 'NO' : datos.pagado,
       },
       'pagos',
       id
@@ -493,12 +500,19 @@ export class NuevoTrabajoComponent {
     const opt = await this.alertService.alertConfirm('¿Estás seguro de editar la información?');
     if (opt.isConfirmed) {
       const datos = this.pagosForm.getRawValue();
+      const semanaEncontrada = this.semanasFilter.find(
+        (semana: any) => semana.toLowerCase() === datos.semana.toLowerCase()
+      );
       this.alertService.loanding('Modificando datos del registro de pago.');
       await this.db.updateDoc(
         {
           ...datos,
           trabajoAnterior: this.selectedItem,
-          idTrabajoAnterior: this.selectedItem ? this.selectedItem.id : ''
+          idTrabajoAnterior: this.selectedItem ? this.selectedItem.id : '',
+          semana: semanaEncontrada ? semanaEncontrada : datos.semana,
+          urgente: datos.urgente === '' ? 'NO' : datos.urgente,
+          placaBase: datos.placaBase === '' ? 'NO' : datos.placaBase,
+          pagado: datos.pagado === '' ? 'NO' : datos.pagado,
         },
         'pagos',
         datos.id
@@ -519,7 +533,7 @@ export class NuevoTrabajoComponent {
 
   async validarNuevos(msj: string, datos: any) {
     if (
-      !this.semanasTodasFilter.some(
+      !this.semanasFilter.some(
         (semana: any) => semana.toLowerCase() === datos.semana.toLowerCase()
       ) &&
       datos.semana !== ''

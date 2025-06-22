@@ -44,12 +44,13 @@
                       (click)="iraNuevo()">
                       <mat-icon class="col-white">add</mat-icon>
                     </button>
-                    <button class="mx-2" mat-mini-fab color="primary" matTooltip="Generar PDF" (click)="generatePDF()">
+                    <button class="mx-2" mat-mini-fab color="primary" matTooltip="Generar PDF"
+                      (click)="selectType('¿Qué total deseas generar?','pdf')">
                       <mat-icon class="col-white">picture_as_pdf</mat-icon>
                     </button>
 
                     <button class="mx-2" mat-mini-fab color="primary" matTooltip="Compartir"
-                      (click)="shareViaWhatsApp()">
+                      (click)="selectType('¿Qué total deseas compartir?','compartir')">
                       <mat-icon class="col-white">share</mat-icon>
                     </button>
                   </div>
@@ -75,10 +76,25 @@
             }
           </mat-menu>
           <div class="table-container d-none d-xl-block">
-            <div class="col-12" style="text-align: end;padding-right: 30px!important;">
-              <h2 class="h5 m-0">Total: <strong>${{ (totalGeneral ||
-                  0).toLocaleString('es-MX',
-                  {minimumFractionDigits: 2}) }}</strong></h2>
+            <div class="row" style="text-align: center;">
+              <div class="col-4">
+                <h2 class="h5 m-0 text-muted small">Total Partida 1: <strong class="fw-bold text-primary fs-5">${{
+                    (totalPartida1 ||
+                    0).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2}) }}</strong></h2>
+              </div>
+              <div class="col-4">
+                <h2 class="h5 m-0 text-muted small">Total Partida 2: <strong class="fw-bold text-primary fs-5">${{
+                    (totalPartida2 ||
+                    0).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2}) }}</strong></h2>
+              </div>
+              <div class="col-4">
+                <h2 class="h5 m-0 text-muted small">Total Semana: <strong class="fw-bold text-primary fs-5">${{
+                    (totalGeneral ||
+                    0).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2}) }}</strong></h2>
+              </div>
             </div>
             <div class="responsive-table-wrapper mt-2">
               @if (dataObs$ | async; as trabajos) {
@@ -87,6 +103,10 @@
                 <ng-container matColumnDef="id">
                   <mat-header-cell *matHeaderCellDef mat-sort-header>Id</mat-header-cell>
                   <mat-cell *matCellDef="let row">{{row.id}}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="partida">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Partida</th>
+                  <td mat-cell *matCellDef="let row">{{row.partida}}</td>
                 </ng-container>
                 <ng-container matColumnDef="noContrato">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>No. Contrato</th>
@@ -205,11 +225,34 @@
           </div>
         </div>
         <div class="d-xl-none">
-          <div class="col-12" style="text-align: end;">
-            <h2 class="h5 m-0">Total: <strong>${{ (totalGeneral ||
-                0).toLocaleString('es-MX',
-                {minimumFractionDigits: 2}) }}</strong></h2>
+          <div class="card p-3 shadow-sm border-0 bg-light">
+            <div class="d-flex flex-column flex-md-row gap-3">
+              <!-- Total Partida 1 -->
+              <div class="d-flex justify-content-between align-items-center w-100">
+                <span class="text-muted small">Total Partida 1:</span>
+                <span class="fw-bold text-primary fs-5">
+                  ${{ (totalPartida1 || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                </span>
+              </div>
+
+              <!-- Total Partida 2 -->
+              <div class="d-flex justify-content-between align-items-center w-100">
+                <span class="text-muted small">Total Partida 2:</span>
+                <span class="fw-bold text-primary fs-5">
+                  ${{ (totalPartida2 || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                </span>
+              </div>
+
+              <!-- Total Semana -->
+              <div class="d-flex justify-content-between align-items-center w-100">
+                <span class="text-muted small">Total Semana:</span>
+                <span class="fw-bold text-primary fs-5">
+                  ${{ (totalGeneral || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                </span>
+              </div>
+            </div>
           </div>
+
           <div class="row mt-3">
             @for (pago of pagos; track pago.id) {
             <div class="col-12 mb-3">
@@ -229,7 +272,7 @@
                 [class.card-normal]="pago.pagado !== 'SI'">
                 <mat-card-header>
                   <mat-card-title class="text-primary fw-bold">
-                    {{ pago.semana }} - #{{ pago.noContrato }}
+                    {{ pago.semana }} ({{pago.partida}}) - #{{ pago.noContrato }}
                   </mat-card-title>
                   <mat-card-subtitle class="text-muted">{{pago.trabajo}}</mat-card-subtitle>
                 </mat-card-header>
@@ -324,6 +367,10 @@
                       <span class="compact-value">{{selectedItem.semana}}</span>
                     </div>
                     <div class="compact-row">
+                      <span class="compact-label">Partida:</span>
+                      <span class="compact-value">{{selectedItem.partida}}</span>
+                    </div>
+                    <div class="compact-row">
                       <span class="compact-label">Consultorio:</span>
                       <span class="compact-value">{{selectedItem.consultorio}}</span>
                     </div>
@@ -357,6 +404,7 @@
                       </div>
                       <div class="col-md-4">
                         <p><strong>Semana:</strong> {{selectedItem.semana}}</p>
+                        <p><strong>Partida:</strong> {{selectedItem.partida}}</p>
                         <p><strong>Trabajo:</strong> {{selectedItem.trabajo}}</p>
                         <p><strong>Fecha Registro:</strong>
                           {{ selectedItem.fechaRegistro ? (selectedItem.fechaRegistro.seconds * 1000 | date:
@@ -395,6 +443,7 @@
                       </div>
                       <div class="col-md-4">
                         <p><strong>Semana:</strong> {{selectedItem1.semana}}</p>
+                        <p><strong>Partida:</strong> {{selectedItem.partida}}</p>
                         <p><strong>Trabajo:</strong> {{selectedItem1.trabajo}}</p>
                         <p><strong>Fecha Registro:</strong>
                           {{ selectedItem1.fechaRegistro ? (selectedItem1.fechaRegistro.seconds * 1000 | date:
@@ -439,7 +488,7 @@
             <mat-card class="shadow-sm rounded card-normal">
               <mat-card-header>
                 <mat-card-title class="text-primary fw-bold">
-                  {{ selectedItem.semana }} - #{{ selectedItem.noContrato }}
+                  {{ selectedItem.semana }} ({{selectedItem.partida}}) - #{{ selectedItem.noContrato }}
                 </mat-card-title>
                 <mat-card-subtitle class="text-muted">
                   {{ selectedItem.trabajo }}
@@ -480,7 +529,7 @@
             <mat-card class="shadow-sm rounded card-normal mt-3">
               <mat-card-header>
                 <mat-card-title class="text-primary fw-bold">
-                  {{ selectedItem1.semana }} - #{{ selectedItem1.noContrato }}
+                  {{ selectedItem1.semana }} ({{selectedItem.partida}}) - #{{ selectedItem1.noContrato }}
                 </mat-card-title>
                 <mat-card-subtitle class="text-muted">
                   {{ selectedItem1.trabajo }}
