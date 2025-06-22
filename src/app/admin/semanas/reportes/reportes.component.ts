@@ -454,7 +454,7 @@ export class ReportesComponent implements OnDestroy {
     doc.setFontSize(12); // Aumentar el tamaño de fuente (de 10 a 12)
     doc.setFont('helvetica', 'bold'); // Establecer fuente en negrita
     doc.text(
-      `TOTAL GENERAL COBRADO: $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`,
+      `TOTAL: $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`,
       14,
       (doc as any).lastAutoTable.finalY + 10
     );
@@ -489,7 +489,7 @@ export class ReportesComponent implements OnDestroy {
       .toLocaleString('es-MX', { minimumFractionDigits: 2 })
       .replace(/,/g, ''); // elimina las comas
 
-    shareText += `*TOTAL GENERAL: $${totalFormatted}*\n`;
+    shareText += `*TOTAL: $${totalFormatted}*\n`;
 
     // Codificar el texto para URL de WhatsApp
     const encodedText = encodeURIComponent(shareText);
