@@ -76,6 +76,7 @@ export class NuevoTrabajoComponent {
   displayedColumns: string[] = [
     'select',
     'semana',
+    'partida',
     'noContrato',
     'consultorio',
     'trabajo',
@@ -168,6 +169,7 @@ export class NuevoTrabajoComponent {
     );
     collRef.forEach((pagos) => dataPagos.push(pagos.data()));
     dataPagos.forEach((item: Pago) => {
+      item.partida ||= 'Partida 1';
       item.semana = this.capitalizarPrimeraLetra(item.semana);
       item.consultorio = this.capitalizarPrimeraLetra(item.consultorio);
       item.trabajo = this.capitalizarPrimeraLetra(item.trabajo);
@@ -381,6 +383,7 @@ export class NuevoTrabajoComponent {
     try {
       const doc = await this.db.asyncDoc('pagos', id);
       this.pago = doc.data() as Pago;
+      this.pago.partida ||= 'Partida 1';
       this.pago.trabajoAnterior ||= null;
       this.pago.fechaEntrega ||= '';
       this.edit = true;
@@ -435,6 +438,7 @@ export class NuevoTrabajoComponent {
     return this.fb.group({
       id: [this.pago.id],
       semana: [this.pago.semana],
+      partida: [this.pago.partida],
       noContrato: [this.pago.noContrato],
       trabajo: [this.pago.trabajo],
       tono: [this.pago.tono],

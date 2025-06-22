@@ -28,6 +28,10 @@
                       <span class="compact-value">{{selectedItem.semana}}</span>
                     </div>
                     <div class="compact-row">
+                      <span class="compact-label">Partida:</span>
+                      <span class="compact-value">{{selectedItem.partida}}</span>
+                    </div>
+                    <div class="compact-row">
                       <span class="compact-label">Consultorio:</span>
                       <span class="compact-value">{{selectedItem.consultorio}}</span>
                     </div>
@@ -58,6 +62,7 @@
                     <div class="row">
                       <div class="col-md-4">
                         <p><strong>Semana:</strong> {{selectedItem.semana}}</p>
+                        <p><strong>Partida:</strong> {{selectedItem.partida}}</p>
                         <p><strong>Trabajo:</strong> {{selectedItem.trabajo}}</p>
                         <p><strong>Fecha Entrega:</strong>
                           {{ selectedItem.fechaEntrega ? (selectedItem.fechaEntrega.seconds * 1000 | date: 'mediumDate')
@@ -90,7 +95,7 @@
             @if (pago){
             <form class="register-form" [formGroup]="pagosForm" (ngSubmit)="onSubmit()">
               <div class="row">
-                <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
+                <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 mb-2">
                   <mat-form-field class="example-full-width" appearance="outline">
                     <mat-label>Semana</mat-label>
                     <input matInput formControlName="semana" [matAutocomplete]="autoProvSemana"
@@ -103,7 +108,17 @@
                     </mat-autocomplete>
                   </mat-form-field>
                 </div>
-                <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
+                <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 mb-2">
+                  <mat-form-field class="example-full-width" appearance="outline">
+                    <mat-label>Partida</mat-label>
+                    <mat-select formControlName="partida">
+                      <mat-option value="Partida 1">Partida 1</mat-option>
+                      <mat-option value="Partida">Partida 2</mat-option>
+                    </mat-select>
+                    <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>description</mat-icon>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 mb-2">
                   <mat-form-field class="example-full-width" appearance="outline">
                     <mat-label>Consultorio</mat-label>
                     <input matInput formControlName="consultorio" [matAutocomplete]="autoProvConsultorio"
@@ -116,7 +131,7 @@
                     </mat-autocomplete>
                   </mat-form-field>
                 </div>
-                <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
+                <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 mb-2">
                   <mat-form-field class="example-full-width" appearance="outline">
                     <mat-label>N° de contrato</mat-label>
                     <input matInput formControlName="noContrato" type="text">
@@ -307,10 +322,16 @@
               </td>
             </ng-container>
 
-            <!-- Columna No. Contrato -->
+            <!-- Columna Semana -->
             <ng-container matColumnDef="semana">
               <th mat-header-cell *matHeaderCellDef>Semana</th>
               <td mat-cell *matCellDef="let element">{{element.semana}}</td>
+            </ng-container>
+
+            <!-- Columna Partida -->
+            <ng-container matColumnDef="partida">
+              <th mat-header-cell *matHeaderCellDef>Partida</th>
+              <td mat-cell *matCellDef="let element">{{element.partida}}</td>
             </ng-container>
 
             <!-- Columna No. Contrato -->
@@ -393,7 +414,7 @@
               <mat-card class="shadow-sm rounded card-normal" [class.card-selected]="selectedItem?.id === item.id">
                 <mat-card-header>
                   <mat-card-title class="text-primary fw-bold">
-                    {{ item.semana }} - #{{ item.noContrato }}
+                    {{ item.semana }} ({{item.partida}}) - #{{ item.noContrato }}
                   </mat-card-title>
                   <mat-card-subtitle class="text-muted">
                     {{ item.trabajo }}

@@ -17,6 +17,7 @@ export class Pago {
   observaciones: string;
   trabajoAnterior: null | Pago;
   trabajoReferencia: null | Pago;
+  partida: string;
 
   constructor(pago: Pago) {
     {
@@ -38,6 +39,7 @@ export class Pago {
       this.observaciones = pago.observaciones || '';
       this.trabajoAnterior = pago.trabajoAnterior || null;
       this.trabajoReferencia = pago.trabajoReferencia || null;
+      this.partida = pago.partida || '';
     }
   }
 }
