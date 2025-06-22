@@ -1,12 +1,12 @@
 export const environment = {
   firebase: {
-    apiKey: "AIzaSyBXIqzYtMMQKIdzLgt3WJcVkle4h51wFvQ",
-    authDomain: "pagosemana-dbca0.firebaseapp.com",
-    projectId: "pagosemana-dbca0",
-    storageBucket: "pagosemana-dbca0.firebasestorage.app",
-    messagingSenderId: "470487682011",
-    appId: "1:470487682011:web:42d5bb54d29233cd9b35fe",
-    measurementId: "G-Z0MGLHE8WC"
+    apiKey: "AIzaSyCB4hugAoxzTiIpay_tNmH0eLzTREYzaL4",
+    authDomain: "pagostest.firebaseapp.com",
+    projectId: "pagostest",
+    storageBucket: "pagostest.firebasestorage.app",
+    messagingSenderId: "676393921476",
+    appId: "1:676393921476:web:2ef6582acfefb7738cd291",
+    measurementId: "G-T9XWKT7S9Q"
   },
   production: false,
   apiUrl: 'http://localhost:4200',
