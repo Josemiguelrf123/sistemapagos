@@ -302,6 +302,22 @@ export class ListadoSemanasComponent implements OnDestroy {
       (sum: any, value: any) => sum + Number(value.totalPorCobrar),
       0
     );
+    this.totalPartida1 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 1'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
+    this.totalPartida2 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 2'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
     this.setPagination(this.pagos);
   }
 
