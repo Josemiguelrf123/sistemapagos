@@ -1,11 +1,11 @@
-import { ChangeDetectorRef, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
 import { NgClass, CommonModule, DatePipe } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { BreadcrumbComponent } from '@shared/components/breadcrumb/breadcrumb.component';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { Observable, Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Pago } from '../componentes/pago.model';
 import { FirestoreService } from '@core/service/firestore.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -61,14 +61,14 @@ declare module 'jspdf' {
     MatExpansionModule
   ],
 })
-export class ReportesComponent implements OnDestroy {
+export class ReportesComponent {
   @ViewChild(MatPaginator, { static: true })
   paginator!: MatPaginator;
   @ViewChild('filter', { static: true })
   filter!: ElementRef;
   dataSource!: MatTableDataSource<any>;
   id!: number;
-  subscriptions: Subscription = new Subscription();
+  // subscriptions: Subscription = new Subscription();
   pagos: Pago[] = [];
   pagosFilter: Pago[] = [];
   dataObs$!: Observable<any>;
@@ -140,9 +140,9 @@ export class ReportesComponent implements OnDestroy {
     this.setupFilterListeners();
   }
 
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-  }
+  // ngOnDestroy(): void {
+  //   this.subscriptions.unsubscribe();
+  // }
 
   valoresUnicos(data: any, type: string) {
     const mapaUnicos = new Map<string, string>();
@@ -182,37 +182,54 @@ export class ReportesComponent implements OnDestroy {
     return ordenadas
   }
 
-  getPagos() {
-    const query = this.db.getCollOrderBy('pagos', 'semana', 'desc');
-    this.subscriptions.add(
-      query.subscribe({
-        next: async (pagos: Pago[]) => {
-          for (let i = 0; i < pagos.length; i++) {
-            pagos[i].trabajoAnterior ||= null;
-            pagos[i].trabajoReferencia ||= null;
-            pagos[i].urgente ||= 'NO';
-            pagos[i].placaBase ||= 'NO';
-            pagos[i].pagado ||= 'NO';
-          }
-          this.pagos = pagos;
-          this.pagosFilter = this.pagos;
-          this.consultorios = this.valoresUnicos(pagos, 'consultorio');
-          this.semanas = this.valoresUnicos(pagos, 'semana');
-          this.tonos = this.valoresUnicos(pagos, 'tono');
-          this.materiales = this.valoresUnicos(pagos, 'material');
-          // this.semanas = [...new Set(pagos.map((p: any) => p.semana))].sort((a: any, b: any) => {
-          //   // Ordenar semanas de más reciente a más antigua
-          //   const numA = parseInt(a.replace('semana ', ''));
-          //   const numB = parseInt(b.replace('semana ', ''));
-          //   return numB - numA;
-          // });
-          // this.tonos = [...new Set(pagos.map((p: any) => p.tono).filter((t: any) => t))];
-          // this.materiales = [...new Set(pagos.map((p: any) => p.material).filter((m: any) => m))];
-          this.setPagination(this.pagos);
-        },
-        error: (err: any) => console.log(err),
-      })
-    );
+  async getPagos() {
+    const pagos: any[] = [];
+    const collRef = await this.db.asyncCollOrderBy('pagos', 'fechaRegistro', 'desc');
+    collRef.forEach((doc) => pagos.push(doc.data()));
+    for (let i = 0; i < pagos.length; i++) {
+      pagos[i].trabajoAnterior ||= null;
+      pagos[i].trabajoReferencia ||= null;
+      pagos[i].urgente ||= 'NO';
+      pagos[i].placaBase ||= 'NO';
+      pagos[i].pagado ||= 'NO';
+    }
+    this.pagos = pagos;
+    this.pagosFilter = this.pagos;
+    this.consultorios = this.valoresUnicos(pagos, 'consultorio');
+    this.semanas = this.valoresUnicos(pagos, 'semana');
+    this.tonos = this.valoresUnicos(pagos, 'tono');
+    this.materiales = this.valoresUnicos(pagos, 'material');
+    this.setPagination(this.pagos);
+    // const query = this.db.getCollOrderBy('pagos', 'semana', 'desc');
+    // this.subscriptions.add(
+    //   query.subscribe({
+    //     next: async (pagos: Pago[]) => {
+    //       for (let i = 0; i < pagos.length; i++) {
+    //         pagos[i].trabajoAnterior ||= null;
+    //         pagos[i].trabajoReferencia ||= null;
+    //         pagos[i].urgente ||= 'NO';
+    //         pagos[i].placaBase ||= 'NO';
+    //         pagos[i].pagado ||= 'NO';
+    //       }
+    //       this.pagos = pagos;
+    //       this.pagosFilter = this.pagos;
+    //       this.consultorios = this.valoresUnicos(pagos, 'consultorio');
+    //       this.semanas = this.valoresUnicos(pagos, 'semana');
+    //       this.tonos = this.valoresUnicos(pagos, 'tono');
+    //       this.materiales = this.valoresUnicos(pagos, 'material');
+    //       // this.semanas = [...new Set(pagos.map((p: any) => p.semana))].sort((a: any, b: any) => {
+    //       //   // Ordenar semanas de más reciente a más antigua
+    //       //   const numA = parseInt(a.replace('semana ', ''));
+    //       //   const numB = parseInt(b.replace('semana ', ''));
+    //       //   return numB - numA;
+    //       // });
+    //       // this.tonos = [...new Set(pagos.map((p: any) => p.tono).filter((t: any) => t))];
+    //       // this.materiales = [...new Set(pagos.map((p: any) => p.material).filter((m: any) => m))];
+    //       this.setPagination(this.pagos);
+    //     },
+    //     error: (err: any) => console.log(err),
+    //   })
+    // );
   }
 
   setupFilterListeners() {
@@ -341,8 +358,10 @@ export class ReportesComponent implements OnDestroy {
       });
     }
 
+
     this.pagos = filteredData;
     this.setPagination(this.pagos);
+    this._changeDetectorRef.markForCheck();
   }
 
   resetFilters() {
@@ -359,7 +378,10 @@ export class ReportesComponent implements OnDestroy {
     this.tonoControl.reset('');
     this.materialControl.reset('');
     this.pagos = [...this.pagosFilter];
+    this.panelOpenState = false;
     this.setPagination(this.pagos);
+
+    this._changeDetectorRef.markForCheck();
   }
 
   setPagination(tableData: Pago[]) {
@@ -498,4 +520,69 @@ export class ReportesComponent implements OnDestroy {
     window.open(`https://wa.me/?text=${encodedText}`, '_blank');
   }
 
+  hasFiltersApplied(): boolean {
+    // Para valores string, chequea que no estén vacíos o solo espacios
+    const isNonEmptyString = (val: any) => typeof val === 'string' && val.trim().length > 0;
+
+    // Para valores no string, considera que null, undefined o '' es "sin filtro"
+    const isValidValue = (val: any) => val !== null && val !== undefined && val !== '';
+
+    return (
+      isNonEmptyString(this.searchControl.value) ||
+      isNonEmptyString(this.consultorioControl.value) ||
+      isNonEmptyString(this.semanaControl.value) ||
+      isValidValue(this.estadoControl.value) ||
+      isValidValue(this.pagadoControl.value) ||
+      isValidValue(this.urgenteControl.value) ||
+      isNonEmptyString(this.tonoControl.value) ||
+      isNonEmptyString(this.materialControl.value) ||
+      isValidValue(this.fechaRegistroInicioControl.value) ||
+      isValidValue(this.fechaRegistroFinControl.value) ||
+      isValidValue(this.fechaEntregaInicioControl.value) ||
+      isValidValue(this.fechaEntregaFinControl.value)
+    );
+  }
+
+  clearFilter(filterName: string) {
+    switch (filterName) {
+      case 'search':
+        this.searchControl.reset('');
+        break;
+      case 'consultorio':
+        this.consultorioControl.reset('');
+        break;
+      case 'semana':
+        this.semanaControl.reset('');
+        break;
+      case 'estado':
+        this.estadoControl.reset('');
+        break;
+      case 'pagado':
+        this.pagadoControl.reset('');
+        break;
+      case 'urgente':
+        this.urgenteControl.reset('');
+        break;
+      case 'tono':
+        this.tonoControl.reset('');
+        break;
+      case 'material':
+        this.materialControl.reset('');
+        break;
+      case 'fechaRegistroInicio':
+        this.fechaRegistroInicioControl.reset('');
+        break;
+      case 'fechaRegistroFin':
+        this.fechaRegistroFinControl.reset('');
+        break;
+      case 'fechaEntregaInicio':
+        this.fechaEntregaInicioControl.reset('');
+        break;
+      case 'fechaEntregaFin':
+        this.fechaEntregaFinControl.reset('');
+        break;
+    }
+
+    this.applyFilters();
+  }
 }

@@ -1,11 +1,11 @@
-import { ChangeDetectorRef, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
 import { NgClass, CommonModule, DatePipe } from '@angular/common';
 import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { BreadcrumbComponent } from '@shared/components/breadcrumb/breadcrumb.component';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { Observable, Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Pago } from '../componentes/pago.model';
 import { FirestoreService } from '@core/service/firestore.service';
 import { Router } from '@angular/router';
@@ -56,14 +56,14 @@ declare module 'jspdf' {
     FeatherIconsComponent
   ],
 })
-export class ListadoSemanasComponent implements OnDestroy {
+export class ListadoSemanasComponent {
   @ViewChild(MatPaginator, { static: true })
   paginator!: MatPaginator;
   @ViewChild('filter', { static: true })
   filter!: ElementRef;
   dataSource!: MatTableDataSource<any>;
   id!: number;
-  subscriptions: Subscription = new Subscription();
+  // subscriptions: Subscription = new Subscription();
   pagosTodos: Pago[] = [];
   pagos: Pago[] = [];
   pagosFilter: Pago[] = [];
@@ -122,57 +122,99 @@ export class ListadoSemanasComponent implements OnDestroy {
     this.getPagos();
   }
 
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-  }
+  // ngOnDestroy(): void {
+  //   this.subscriptions.unsubscribe();
+  // }
 
-  getPagos() {
-    const query = this.db.getCollOrderBy('pagos', 'fechaRegistro', 'desc');
-    this.subscriptions.add(
-      query.subscribe({
-        next: async (pagos: any) => {
-          for (let i = 0; i < pagos.length; i++) {
-            pagos[i].trabajoAnterior ||= null;
-            pagos[i].trabajoReferencia ||= null;
-            pagos[i].partida ||= 'Partida 1';
-          }
-          this.pagosTodos = pagos;
-          const semanas = this.pagosTodos.map((res: Pago) => res.semana);
-          const semanasUnicasOrdenadas = [...new Set(semanas)].sort((a, b) => {
-            const numA = parseInt(a.replace(/\D/g, ''));
-            const numB = parseInt(b.replace(/\D/g, ''));
-            return numB - numA;
-          });
-          this.semanas = semanasUnicasOrdenadas;
-          const ultimaSemana = semanasUnicasOrdenadas[0];
-          this.semanaSelect = ultimaSemana;
-          this.pagos = this.pagosTodos.filter((res: Pago) => res.semana === ultimaSemana);
-          this.pagosFilter = this.pagos;
-          this.totalGeneral = this.pagos.reduce(
-            (sum: any, value: any) => sum + Number(value.totalPorCobrar),
-            0
-          );
-          this.totalPartida1 = this.pagos.reduce(
-            (sum: number, value: any) => {
-              return value.partida === 'Partida 1'
-                ? sum + Number(value.totalPorCobrar)
-                : sum;
-            },
-            0
-          );
-          this.totalPartida2 = this.pagos.reduce(
-            (sum: number, value: any) => {
-              return value.partida === 'Partida 2'
-                ? sum + Number(value.totalPorCobrar)
-                : sum;
-            },
-            0
-          );
-          this.setPagination(this.pagos);
-        },
-        error: (err: any) => console.log(err),
-      })
+  async getPagos() {
+    const pagos: any[] = [];
+    const collRef = await this.db.asyncCollOrderBy('pagos', 'fechaRegistro', 'desc');
+    collRef.forEach((doc) => pagos.push(doc.data()));
+    for (let i = 0; i < pagos.length; i++) {
+      pagos[i].trabajoAnterior ||= null;
+      pagos[i].trabajoReferencia ||= null;
+      pagos[i].partida ||= 'Partida 1';
+    }
+    this.pagosTodos = pagos;
+    const semanas = this.pagosTodos.map((res: Pago) => res.semana);
+    const semanasUnicasOrdenadas = [...new Set(semanas)].sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ''));
+      const numB = parseInt(b.replace(/\D/g, ''));
+      return numB - numA;
+    });
+    this.semanas = semanasUnicasOrdenadas;
+    const ultimaSemana = semanasUnicasOrdenadas[0];
+    this.semanaSelect = ultimaSemana;
+    this.pagos = this.pagosTodos.filter((res: Pago) => res.semana === ultimaSemana);
+    this.pagosFilter = this.pagos;
+    this.totalGeneral = this.pagos.reduce(
+      (sum: any, value: any) => sum + Number(value.totalPorCobrar),
+      0
     );
+    this.totalPartida1 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 1'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
+    this.totalPartida2 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 2'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
+    this.setPagination(this.pagos);
+
+    // const query = this.db.getCollOrderBy('pagos', 'fechaRegistro', 'desc');
+    // this.subscriptions.add(
+    //   query.subscribe({
+    //     next: async (pagos: any) => {
+    //       for (let i = 0; i < pagos.length; i++) {
+    //         pagos[i].trabajoAnterior ||= null;
+    //         pagos[i].trabajoReferencia ||= null;
+    //         pagos[i].partida ||= 'Partida 1';
+    //       }
+    //       this.pagosTodos = pagos;
+    //       const semanas = this.pagosTodos.map((res: Pago) => res.semana);
+    //       const semanasUnicasOrdenadas = [...new Set(semanas)].sort((a, b) => {
+    //         const numA = parseInt(a.replace(/\D/g, ''));
+    //         const numB = parseInt(b.replace(/\D/g, ''));
+    //         return numB - numA;
+    //       });
+    //       this.semanas = semanasUnicasOrdenadas;
+    //       const ultimaSemana = semanasUnicasOrdenadas[0];
+    //       this.semanaSelect = ultimaSemana;
+    //       this.pagos = this.pagosTodos.filter((res: Pago) => res.semana === ultimaSemana);
+    //       this.pagosFilter = this.pagos;
+    //       this.totalGeneral = this.pagos.reduce(
+    //         (sum: any, value: any) => sum + Number(value.totalPorCobrar),
+    //         0
+    //       );
+    //       this.totalPartida1 = this.pagos.reduce(
+    //         (sum: number, value: any) => {
+    //           return value.partida === 'Partida 1'
+    //             ? sum + Number(value.totalPorCobrar)
+    //             : sum;
+    //         },
+    //         0
+    //       );
+    //       this.totalPartida2 = this.pagos.reduce(
+    //         (sum: number, value: any) => {
+    //           return value.partida === 'Partida 2'
+    //             ? sum + Number(value.totalPorCobrar)
+    //             : sum;
+    //         },
+    //         0
+    //       );
+    //       this.setPagination(this.pagos);
+    //     },
+    //     error: (err: any) => console.log(err),
+    //   })
+    // );
   }
 
   filterDatatable(event: any) {

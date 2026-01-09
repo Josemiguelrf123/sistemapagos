@@ -106,6 +106,46 @@ export class NuevoTrabajoComponent {
     this.route.params.subscribe(({ id }) => this.validarId(id));
   }
 
+  // async guardar() {
+  //   const data: any = []
+
+  //   const convertirFecha = (obj: any, campo: string) => {
+  //     if (obj?.[campo]?.seconds) {
+  //       obj[campo] = new Date(obj[campo].seconds * 1000);
+  //     }
+  //   };
+  //   for (let i = 0; i < data.length; i++) {
+
+  //     // Fechas principales
+  //     convertirFecha(data[i], 'create_at');
+  //     convertirFecha(data[i], 'fechaRegistro');
+  //     convertirFecha(data[i], 'fechaEntrega');
+
+  //     // Trabajo anterior
+  //     if (data[i]?.trabajoAnterior) {
+  //       convertirFecha(data[i].trabajoAnterior, 'createAt');
+  //       convertirFecha(data[i].trabajoAnterior, 'fechaRegistro');
+  //       convertirFecha(data[i].trabajoAnterior, 'fechaEntrega');
+  //     }
+
+  //     // Trabajo referencia
+  //     if (data[i]?.trabajoReferencia) {
+  //       convertirFecha(data[i].trabajoReferencia, 'createAt');
+  //       convertirFecha(data[i].trabajoReferencia, 'fechaRegistro');
+  //       convertirFecha(data[i].trabajoReferencia, 'fechaEntrega');
+  //     }
+
+  //     await this.db.createDoc(
+  //       data[i],
+  //       'pagos',
+  //       data[i].id
+  //     );
+
+  //     console.log('terminado--', i, 'De----', data.length);
+  //   }
+  //   console.log('termino------------------');
+  // }
+
   async getValueSemanas() {
     this.semanas = [];
 

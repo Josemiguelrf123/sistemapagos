@@ -458,4 +458,69 @@ mat-paginator {
     border-radius: 0;
     padding: 1rem;
   }
+
+  .custom-search-button {
+    background-color: #007bff;
+    /* azul brillante */
+    color: white;
+    font-weight: 600;
+  }
+
+  .custom-search-button:hover {
+    background-color: #0056b3;
+  }
+
+  .btn-clear-filters {
+    background-color: #f44336;
+    /* rojo vibrante */
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 3px 6px rgba(244, 67, 54, 0.5);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .btn-clear-filters:hover {
+    background-color: #d32f2f;
+    /* rojo más oscuro */
+    box-shadow: 0 5px 10px rgba(211, 47, 47, 0.7);
+  }
+
+  .filter-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    background-color: #6200ea;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    user-select: none;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-left: 8px;
+    line-height: 1;
+    padding: 0;
+    user-select: none;
+    transition: color 0.2s ease;
+  }
+
+  .close-btn:hover {
+    color: #ff5252;
+  }
+
+
 }
