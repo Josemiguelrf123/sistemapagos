@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { NgClass, CommonModule, DatePipe } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
@@ -62,6 +62,10 @@ declare module 'jspdf' {
   ],
 })
 export class ReportesComponent {
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    this.showScrollTop = window.scrollY > 300;
+  }
   @ViewChild(MatPaginator, { static: true })
   paginator!: MatPaginator;
   @ViewChild('filter', { static: true })
@@ -84,6 +88,9 @@ export class ReportesComponent {
   fechaRegistroFinControl = new FormControl('');
   fechaEntregaInicioControl = new FormControl('');
   fechaEntregaFinControl = new FormControl('');
+  yearsControl = new FormControl('');
+  mesRControl = new FormControl('');
+  mesEControl = new FormControl('');
   tonoControl = new FormControl('');
   materialControl = new FormControl('');
 
@@ -131,11 +138,19 @@ export class ReportesComponent {
     'totalcobrar',
     'observaciones',
   ];
+  showScrollTop = false;
+  anios: number[] = [];
+  meses: string[] = [];
 
   constructor(
     private db: FirestoreService,
     private _changeDetectorRef: ChangeDetectorRef,
   ) {
+    const anioActual = new Date().getFullYear();
+    for (let anio = 2025; anio <= anioActual; anio++) {
+      this.anios.push(anio);
+    }
+    this.meses = this.getMesesDesde2025();
     this.getPagos();
     this.setupFilterListeners();
   }
@@ -143,6 +158,39 @@ export class ReportesComponent {
   // ngOnDestroy(): void {
   //   this.subscriptions.unsubscribe();
   // }
+
+  getMesesDesde2025(): string[] {
+    const meses = [
+      'Enero', 'Febrero', 'Marzo', 'Abril',
+      'Mayo', 'Junio', 'Julio', 'Agosto',
+      'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+
+    const resultado: string[] = [];
+
+    const anioInicio = 2025;
+    const hoy = new Date();
+    const anioActual = hoy.getFullYear();
+    const mesActual = hoy.getMonth(); // 0 = enero
+
+    for (let anio = anioInicio; anio <= anioActual; anio++) {
+      const limiteMes =
+        anio === anioActual ? mesActual : 11;
+
+      for (let mes = 0; mes <= limiteMes; mes++) {
+        resultado.push(`${meses[mes]} ${anio}`);
+      }
+    }
+
+    return resultado.reverse();
+  }
+
+  scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
 
   valoresUnicos(data: any, type: string) {
     const mapaUnicos = new Map<string, string>();
@@ -244,8 +292,11 @@ export class ReportesComponent {
     this.fechaRegistroFinControl.valueChanges.subscribe(() => this.applyFilters());
     this.fechaEntregaInicioControl.valueChanges.subscribe(() => this.applyFilters());
     this.fechaEntregaFinControl.valueChanges.subscribe(() => this.applyFilters());
+    this.yearsControl.valueChanges.subscribe(() => this.applyFilters());
     this.tonoControl.valueChanges.subscribe(() => this.applyFilters());
     this.materialControl.valueChanges.subscribe(() => this.applyFilters());
+    this.mesRControl.valueChanges.subscribe(() => this.applyFilters());
+    this.mesEControl.valueChanges.subscribe(() => this.applyFilters());
   }
 
   normalizarTexto(texto: string): string {
@@ -253,6 +304,39 @@ export class ReportesComponent {
       .normalize('NFD') // Separa los caracteres base de sus acentos
       .replace(/[\u0300-\u036f]/g, '') // Elimina los diacríticos
       .toLowerCase();
+  }
+
+  getRangoMes(mesAnio: string): { inicio: Date; fin: Date } {
+    const mesesMap: Record<string, number> = {
+      enero: 0,
+      febrero: 1,
+      marzo: 2,
+      abril: 3,
+      mayo: 4,
+      junio: 5,
+      julio: 6,
+      agosto: 7,
+      septiembre: 8,
+      octubre: 9,
+      noviembre: 10,
+      diciembre: 11
+    };
+
+    const [mesTexto, anioTexto] = mesAnio.split(' ');
+    const mes = mesesMap[mesTexto.toLowerCase()];
+    const anio = Number(anioTexto);
+
+    if (mes === undefined || isNaN(anio)) {
+      throw new Error('Formato inválido. Usa "Enero 2025"');
+    }
+
+    // Primer día del mes
+    const inicio = new Date(anio, mes, 1, 0, 0, 0, 0);
+
+    // Último día del mes
+    const fin = new Date(anio, mes + 1, 0, 23, 59, 59, 999);
+
+    return { inicio, fin };
   }
 
   applyFilters() {
@@ -358,6 +442,41 @@ export class ReportesComponent {
       });
     }
 
+    // Filtro por years
+    if (this.yearsControl.value) {
+      const searchTerm = this.yearsControl.value;
+      filteredData = filteredData.filter(pago =>
+        (String(pago.years) || '').includes(searchTerm)
+      );
+    }
+
+    // Filtro por mes de registro
+    if (this.mesRControl.value) {
+      const searchTerm = this.mesRControl.value;
+      const { inicio, fin } = this.getRangoMes(searchTerm);
+      filteredData = filteredData.filter(pago => {
+        if (!pago.fechaRegistro?.seconds) return false;
+        const registroMs = pago.fechaRegistro.seconds * 1000;
+        return (
+          registroMs >= inicio.getTime() &&
+          registroMs <= fin.getTime()
+        );
+      });
+    }
+
+    // Filtro por mes de entrega
+    if (this.mesEControl.value) {
+      const searchTerm = this.mesEControl.value;
+      const { inicio, fin } = this.getRangoMes(searchTerm);
+      filteredData = filteredData.filter(pago => {
+        if (!pago.fechaEntrega?.seconds) return false;
+        const registroMs = pago.fechaEntrega.seconds * 1000;
+        return (
+          registroMs >= inicio.getTime() &&
+          registroMs <= fin.getTime()
+        );
+      });
+    }
 
     this.pagos = filteredData;
     this.setPagination(this.pagos);
@@ -375,8 +494,11 @@ export class ReportesComponent {
     this.fechaRegistroFinControl.reset('');
     this.fechaEntregaInicioControl.reset('');
     this.fechaEntregaFinControl.reset('');
+    this.yearsControl.reset('');
     this.tonoControl.reset('');
     this.materialControl.reset('');
+    this.mesRControl.reset('');
+    this.mesEControl.reset('');
     this.pagos = [...this.pagosFilter];
     this.panelOpenState = false;
     this.setPagination(this.pagos);
@@ -417,7 +539,7 @@ export class ReportesComponent {
     ];
 
     const body = pagosFilter.map(pago => [
-      pago.semana || '',
+      `${pago.semana || ''} (${pago.years || '2025'})`,
       pago.noContrato || '',
       pago.consultorio || '',
       pago.trabajo || '',
@@ -492,7 +614,7 @@ export class ReportesComponent {
     shareText += '--------------------------------\n\n';
     // Agregar cada trabajo al texto
     pagosFilter.forEach((pago, index) => {
-      shareText += `*Semana*: ${pago.semana || 'N/A'}\n`;
+      shareText += `*Semana*: ${pago.semana || 'N/A'} - ${pago.years || '2025'}\n`;
       shareText += `*No. Contrato*: ${pago.noContrato || 'N/A'}\n`;
       shareText += `*Consultorio*: ${pago.consultorio || 'N/A'}\n`;
       shareText += `*Trabajo*: ${pago.trabajo || ''} ${pago.placaBase.toLowerCase() === 'si' ? ', con placa base' : ''} ${pago.urgente.toLowerCase() === 'si' ? 'y fue urgente' : ''} (*${pago.pruebaTerminada ? pago.pruebaTerminada.charAt(0).toUpperCase() + pago.pruebaTerminada.slice(1).toLowerCase() : 'Terminada'}*)\n`;
@@ -539,7 +661,10 @@ export class ReportesComponent {
       isValidValue(this.fechaRegistroInicioControl.value) ||
       isValidValue(this.fechaRegistroFinControl.value) ||
       isValidValue(this.fechaEntregaInicioControl.value) ||
-      isValidValue(this.fechaEntregaFinControl.value)
+      isValidValue(this.fechaEntregaFinControl.value) ||
+      isValidValue(this.yearsControl.value) ||
+      isValidValue(this.mesRControl.value) ||
+      isValidValue(this.mesEControl.value)
     );
   }
 
@@ -580,6 +705,15 @@ export class ReportesComponent {
         break;
       case 'fechaEntregaFin':
         this.fechaEntregaFinControl.reset('');
+        break;
+      case 'years':
+        this.yearsControl.reset('');
+        break;
+      case 'mesR':
+        this.mesRControl.reset('');
+        break;
+      case 'mesE':
+        this.mesEControl.reset('');
         break;
     }
 

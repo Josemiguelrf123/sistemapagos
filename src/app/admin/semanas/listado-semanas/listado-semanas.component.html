@@ -6,8 +6,25 @@
     </div>
     <div class="row">
       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card p-3 mb-3">
+          <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
+            <span class="h6 m-0">
+              Selecciona el año para filtrar las semanas:
+            </span>
+
+            <mat-form-field appearance="outline" style="min-width: 160px;">
+              <mat-label>Año</mat-label>
+              <mat-select [(value)]="anioSeleccionado" (selectionChange)="cargarPorAnio()">
+                @for (anio of anios; track anio) {
+                <mat-option [value]="anio">{{ anio }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
         <div class="card">
-          <mat-tab-group (selectedTabChange)="onTabChanged($event)">
+          <mat-tab-group *ngIf="semanas.length > 0" [selectedIndex]="selectedTabIndex"
+            (selectedTabChange)="onTabChanged($event)">
             @for (semana of semanas; track semana; let i = $index) {
             <mat-tab>
               <ng-template mat-tab-label>
@@ -117,13 +134,15 @@
                   <td mat-cell *matCellDef="let row">
                     {{row.trabajo}}
                     <div class="seguimiento-banner" *ngIf="row.trabajoAnterior">
-                      <strong>🟣 Trabajo de {{row?.trabajoAnterior?.semana}}.</strong>
+                      <strong>🟣 Trabajo de {{row?.trabajoAnterior?.semana}} ({{row?.trabajoAnterior?.years ||
+                        '2025'}}).</strong>
                       <button mat-button color="primary" (click)="abrirModal(row.trabajoAnterior, row)">
                         Ver
                       </button>
                     </div>
                     <div class="seguimiento-banner" *ngIf="row.trabajoReferencia">
-                      <strong>🟣 Seguimiento en {{row?.trabajoReferencia?.semana}}.</strong>
+                      <strong>🟣 Seguimiento en {{row?.trabajoReferencia?.semana}} ({{row?.trabajoReferencia?.years ||
+                        '2025'}}).</strong>
                       <button mat-button color="primary" (click)="abrirModal(row,row.trabajoReferencia)">
                         Ver
                       </button>
@@ -257,13 +276,15 @@
             @for (pago of pagos; track pago.id) {
             <div class="col-12 mb-3">
               <div class="seguimiento-banner" *ngIf="pago.trabajoAnterior">
-                <strong>🟣 Trabajo de {{pago?.trabajoAnterior?.semana}}.</strong>
+                <strong>🟣 Trabajo de {{pago?.trabajoAnterior?.semana}} ({{pago?.trabajoAnterior?.years ||
+                  '2025'}}).</strong>
                 <button mat-button color="primary" (click)="abrirModal(pago.trabajoAnterior, pago)">
                   Ver
                 </button>
               </div>
               <div class="seguimiento-banner" *ngIf="pago.trabajoReferencia">
-                <strong>🟣 Seguimiento en {{pago?.trabajoReferencia?.semana}}.</strong>
+                <strong>🟣 Seguimiento en {{pago?.trabajoReferencia?.semana}} ({{pago?.trabajoReferencia?.years ||
+                  '2025'}}).</strong>
                 <button mat-button color="primary" (click)="abrirModal(pago,pago.trabajoReferencia)">
                   Ver
                 </button>
@@ -364,7 +385,7 @@
                   <div class="d-block d-md-none compact-view">
                     <div class="compact-row">
                       <span class="compact-label">Semana:</span>
-                      <span class="compact-value">{{selectedItem.semana}}</span>
+                      <span class="compact-value">{{selectedItem.semana}} ({{selectedItem.years || '2025'}})</span>
                     </div>
                     <div class="compact-row">
                       <span class="compact-label">Partida:</span>
@@ -403,7 +424,7 @@
                         <h3>Registro 1</h3>
                       </div>
                       <div class="col-md-4">
-                        <p><strong>Semana:</strong> {{selectedItem.semana}}</p>
+                        <p><strong>Semana:</strong> {{selectedItem.semana}} ({{selectedItem.years || '2025'}})</p>
                         <p><strong>Partida:</strong> {{selectedItem.partida}}</p>
                         <p><strong>Trabajo:</strong> {{selectedItem.trabajo}}</p>
                         <p><strong>Fecha Registro:</strong>
@@ -442,8 +463,8 @@
                         <h3>Registro 2</h3>
                       </div>
                       <div class="col-md-4">
-                        <p><strong>Semana:</strong> {{selectedItem1.semana}}</p>
-                        <p><strong>Partida:</strong> {{selectedItem.partida}}</p>
+                        <p><strong>Semana:</strong> {{selectedItem1.semana}} ({{selectedItem1.years || '2025'}})</p>
+                        <p><strong>Partida:</strong> {{selectedItem1.partida}}</p>
                         <p><strong>Trabajo:</strong> {{selectedItem1.trabajo}}</p>
                         <p><strong>Fecha Registro:</strong>
                           {{ selectedItem1.fechaRegistro ? (selectedItem1.fechaRegistro.seconds * 1000 | date:
@@ -488,7 +509,8 @@
             <mat-card class="shadow-sm rounded card-normal">
               <mat-card-header>
                 <mat-card-title class="text-primary fw-bold">
-                  {{ selectedItem.semana }} ({{selectedItem.partida}}) - #{{ selectedItem.noContrato }}
+                  {{ selectedItem.semana }} - {{selectedItem.years || '2025'}} ({{selectedItem.partida}}) - #{{
+                  selectedItem.noContrato }}
                 </mat-card-title>
                 <mat-card-subtitle class="text-muted">
                   {{ selectedItem.trabajo }}
@@ -529,7 +551,8 @@
             <mat-card class="shadow-sm rounded card-normal mt-3">
               <mat-card-header>
                 <mat-card-title class="text-primary fw-bold">
-                  {{ selectedItem1.semana }} ({{selectedItem.partida}}) - #{{ selectedItem1.noContrato }}
+                  {{ selectedItem1.semana }} - {{selectedItem1.years || '2025'}} ({{selectedItem1.partida}}) - #{{
+                  selectedItem1.noContrato }}
                 </mat-card-title>
                 <mat-card-subtitle class="text-muted">
                   {{ selectedItem1.trabajo }}

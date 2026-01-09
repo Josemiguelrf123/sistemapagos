@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/co
 import { NgClass, CommonModule, DatePipe } from '@angular/common';
 import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
 import { BreadcrumbComponent } from '@shared/components/breadcrumb/breadcrumb.component';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -53,6 +54,7 @@ declare module 'jspdf' {
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     FeatherIconsComponent
   ],
 })
@@ -110,6 +112,9 @@ export class ListadoSemanasComponent {
   totalGeneral = 0;
   totalPartida1 = 0;
   totalPartida2 = 0;
+  anios: number[] = [];
+  anioSeleccionado!: number;
+  selectedTabIndex = 0;
 
   constructor(
     private db: FirestoreService,
@@ -119,6 +124,12 @@ export class ListadoSemanasComponent {
     private excelService: ExcelService,
     private alertService: AlertService
   ) {
+    const anioActual = new Date().getFullYear();
+    for (let anio = 2025; anio <= anioActual; anio++) {
+      this.anios.push(anio);
+    }
+
+    this.anioSeleccionado = anioActual;
     this.getPagos();
   }
 
@@ -127,9 +138,27 @@ export class ListadoSemanasComponent {
   // }
 
   async getPagos() {
+    // const data: any[] = [];
+    // const collRef1 = await this.db.asyncColl(
+    //   'pagos',
+    // );
+    // collRef1.forEach((doc) => data.push(doc.data()));
+    // for (const d of data){
+    //   await this.db.updateDoc({ years: 2025 }, 'pagos', d.id);
+    // }
+    // console.log(data);
+    // return
     const pagos: any[] = [];
-    const collRef = await this.db.asyncCollOrderBy('pagos', 'fechaRegistro', 'desc');
+    const collRef = await this.db.asyncCollWhereOrderBy(
+      'pagos',
+      'years',
+      '==',
+      this.anioSeleccionado,
+      'fechaRegistro',
+      'desc'
+    );
     collRef.forEach((doc) => pagos.push(doc.data()));
+    this.alertService.alertClose();
     for (let i = 0; i < pagos.length; i++) {
       pagos[i].trabajoAnterior ||= null;
       pagos[i].trabajoReferencia ||= null;
@@ -143,9 +172,19 @@ export class ListadoSemanasComponent {
       return numB - numA;
     });
     this.semanas = semanasUnicasOrdenadas;
-    const ultimaSemana = semanasUnicasOrdenadas[0];
-    this.semanaSelect = ultimaSemana;
-    this.pagos = this.pagosTodos.filter((res: Pago) => res.semana === ultimaSemana);
+    if (this.semanas.length > 0) {
+      const ultimaSemana = semanasUnicasOrdenadas[0];
+      this.selectedTabIndex = 0;
+      this.semanaSelect = ultimaSemana;
+      this.pagos = this.pagosTodos.filter(
+        (res: Pago) => res.semana === this.semanaSelect
+      );
+    } else {
+      this.selectedTabIndex = 0;
+      this.semanaSelect = '';
+      this.pagos = [];
+    }
+
     this.pagosFilter = this.pagos;
     this.totalGeneral = this.pagos.reduce(
       (sum: any, value: any) => sum + Number(value.totalPorCobrar),
@@ -327,6 +366,7 @@ export class ListadoSemanasComponent {
       if (row.idTrabajoAnterior !== '') {
         await this.db.updateDoc({ trabajoReferencia: null, idReferencia: '', pagado: '' }, 'pagos', row.idTrabajoAnterior);
       }
+      this.getPagos();
       this.alertService.toast(
         'Pago eliminado correctamente',
         'snackbar-success'
@@ -402,7 +442,7 @@ export class ListadoSemanasComponent {
     doc.setFont('helvetica');
     doc.setFontSize(18);
     doc.setTextColor(40, 40, 40);
-    doc.text(`Reporte de Trabajos ${this.semanaSelect}${select === '' || select === 'total' ? ' (General)' : " (" + select + ")"}`, 148.5, 15, { align: 'center' });
+    doc.text(`Reporte de Trabajos ${this.semanaSelect} - ${this.anioSeleccionado}${select === '' || select === 'total' ? ' (General)' : " (" + select + ")"}`, 148.5, 15, { align: 'center' });
 
     // Datos para la tabla
     const headers = [
@@ -473,7 +513,7 @@ export class ListadoSemanasComponent {
     );
 
     // Guardar PDF
-    doc.save(`reporte_trabajos_${this.semanaSelect}_${select === '' || select === 'total' ? 'General' : select}.pdf`);
+    doc.save(`reporte_trabajos_${this.semanaSelect}_${this.anioSeleccionado}_${select === '' || select === 'total' ? 'General' : select}.pdf`);
   }
 
   shareViaWhatsApp(select: string) {
@@ -509,6 +549,16 @@ export class ListadoSemanasComponent {
 
     // Abrir WhatsApp con el texto
     window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+  }
+
+  cargarPorAnio() {
+    this.semanas = [];
+    this.pagos = [];
+    this.pagosFilter = [];
+    this.semanaSelect = '';
+    this.selectedTabIndex = 0;
+    this.alertService.loanding('Cargando datos...')
+    this.getPagos();
   }
 
 }

@@ -89,6 +89,7 @@ export class NuevoTrabajoComponent {
   ];
   selectedItemOriginal: any = null;
   selectedItem: any = null;
+  anioActual!: number;
 
   constructor(
     private fb: UntypedFormBuilder,
@@ -98,7 +99,6 @@ export class NuevoTrabajoComponent {
     private route: ActivatedRoute
   ) {
     this.getPagos();
-    this.getValueSemanas();
     this.getValueTrabajos();
     this.getValueTonos();
     this.getValueConsultorios();
@@ -147,10 +147,27 @@ export class NuevoTrabajoComponent {
   // }
 
   async getValueSemanas() {
+    //  const data: any[] = [];
+    // const collRef1 = await this.db.asyncColl(
+    //   'semanas',
+    // );
+    // collRef1.forEach((doc) => data.push(doc.data()));
+    // for (const d of data){
+    //   await this.db.updateDoc({ years: 2025 }, 'semanas', d.id);
+    // }
+    // console.log(data);
+    // return
     this.semanas = [];
 
     const dataSemanas: any[] = [];
-    const collRef = await this.db.asyncCollOrderBy('semanas', 'nombre', 'desc');
+    const collRef = await this.db.asyncCollWhereOrderBy(
+      'semanas',
+      'years',
+      '==',
+      this.anioActual,
+      'nombre',
+      'desc'
+    );
     collRef.forEach((doc) => dataSemanas.push(doc.data()));
 
     // 🧼 Normaliza: sin tildes, minúsculas, trim
@@ -413,9 +430,11 @@ export class NuevoTrabajoComponent {
     if (id !== 'agregar') {
       this.obtenerInformacion(id);
     } else {
+      this.anioActual = new Date().getFullYear();
       const blankObject = {} as Pago;
       this.pago = new Pago(blankObject);
       this.crearFormulario();
+      this.getValueSemanas();
     }
   }
 
@@ -426,6 +445,7 @@ export class NuevoTrabajoComponent {
       this.pago.partida ||= 'Partida 1';
       this.pago.trabajoAnterior ||= null;
       this.pago.fechaEntrega ||= '';
+      this.anioActual = this.pago.years;
       this.edit = true;
       if (this.pago.fechaRegistro) {
         this.pago.fechaRegistro = new Date(
@@ -439,6 +459,7 @@ export class NuevoTrabajoComponent {
       }
       this.selectedItem = this.pago.trabajoAnterior;
       this.selectedItemOriginal = JSON.parse(JSON.stringify(this.pago.trabajoAnterior));
+      this.getValueSemanas();
       this.crearFormulario();
     } catch (error) {
       console.log(error);
@@ -493,6 +514,7 @@ export class NuevoTrabajoComponent {
       totalPorCobrar: [this.pago.totalPorCobrar],
       pagado: [this.pago.pagado],
       observaciones: [this.pago.observaciones],
+      years: [this.pago.years],
     });
   }
 
@@ -580,7 +602,7 @@ export class NuevoTrabajoComponent {
     ) {
       const id = this.db.getId();
       await this.db.createDoc(
-        { nombre: datos.semana, create_at: new Date(), id },
+        { nombre: datos.semana, create_at: new Date(), years: this.anioActual, id },
         'semanas',
         id
       );

@@ -523,4 +523,12 @@ mat-paginator {
   }
 
 
+  .scroll-top-btn {
+    position: fixed;
+    bottom: 40px;
+    /* deja espacio al header fijo */
+    right: 16px;
+    z-index: 1100;
+  }
+
 }

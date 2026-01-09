@@ -25,7 +25,7 @@
                   <div class="d-block d-md-none compact-view">
                     <div class="compact-row">
                       <span class="compact-label">Semana:</span>
-                      <span class="compact-value">{{selectedItem.semana}}</span>
+                      <span class="compact-value">{{selectedItem.semana}} ({{selectedItem?.years || '2025'}})</span>
                     </div>
                     <div class="compact-row">
                       <span class="compact-label">Partida:</span>
@@ -61,7 +61,7 @@
                   <div class="d-none d-md-block">
                     <div class="row">
                       <div class="col-md-4">
-                        <p><strong>Semana:</strong> {{selectedItem.semana}}</p>
+                        <p><strong>Semana:</strong> {{selectedItem.semana}} ({{selectedItem?.years || '2025'}})</p>
                         <p><strong>Partida:</strong> {{selectedItem.partida}}</p>
                         <p><strong>Trabajo:</strong> {{selectedItem.trabajo}}</p>
                         <p><strong>Fecha Entrega:</strong>
@@ -99,7 +99,7 @@
                   <mat-form-field class="example-full-width" appearance="outline">
                     <mat-label>Semana</mat-label>
                     <input matInput formControlName="semana" [matAutocomplete]="autoProvSemana"
-                      (input)="_filterProvMateriales($any($event.target).value)">
+                      (input)="_filterProvSemanas($any($event.target).value)">
                     <mat-icon class="material-icons-outlined color-icon p-3" matSuffix>calendar_today</mat-icon>
                     <mat-autocomplete autoActiveFirstOption #autoProvSemana="matAutocomplete">
                       @for (semana of semanasFilter; track semana) {
@@ -325,7 +325,7 @@
             <!-- Columna Semana -->
             <ng-container matColumnDef="semana">
               <th mat-header-cell *matHeaderCellDef>Semana</th>
-              <td mat-cell *matCellDef="let element">{{element.semana}}</td>
+              <td mat-cell *matCellDef="let element">{{element.semana}} ({{element?.years || '2025'}})</td>
             </ng-container>
 
             <!-- Columna Partida -->
@@ -414,7 +414,7 @@
               <mat-card class="shadow-sm rounded card-normal" [class.card-selected]="selectedItem?.id === item.id">
                 <mat-card-header>
                   <mat-card-title class="text-primary fw-bold">
-                    {{ item.semana }} ({{item.partida}}) - #{{ item.noContrato }}
+                    {{ item.semana }} ({{item?.years || '2025'}}) - ({{item.partida}}) - #{{ item.noContrato }}
                   </mat-card-title>
                   <mat-card-subtitle class="text-muted">
                     {{ item.trabajo }}

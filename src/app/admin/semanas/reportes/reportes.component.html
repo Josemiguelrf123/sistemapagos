@@ -136,6 +136,39 @@
                   <mat-datepicker #pickerEntregaFin></mat-datepicker>
                 </mat-form-field>
               </div>
+              <div class="col-md-4 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Por año</mat-label>
+                  <mat-select [formControl]="yearsControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let years of anios" [value]="years">
+                      {{years}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-md-4 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Mes Fecha Registro</mat-label>
+                  <mat-select [formControl]="mesRControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let mes of meses" [value]="mes">
+                      {{mes}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-md-4 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Mes Fecha Entrega</mat-label>
+                  <mat-select [formControl]="mesEControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let mes of meses" [value]="mes">
+                      {{mes}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
               <div class="col-md-2 mb-2 d-flex align-items-center">
                 <button mat-stroked-button color="warn" class="w-100" (click)="resetFilters()">
                   <mat-icon>clear</mat-icon> Limpiar
@@ -275,6 +308,39 @@
                       <mat-datepicker #pickerEntregaFinMobile></mat-datepicker>
                     </mat-form-field>
                   </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Por año</mat-label>
+                      <mat-select [formControl]="yearsControl">
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option *ngFor="let years of anios" [value]="years">
+                          {{years}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Mes Fecha Registro</mat-label>
+                      <mat-select [formControl]="mesRControl">
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option *ngFor="let mes of meses" [value]="mes">
+                          {{mes}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Mes Fecha Entrega</mat-label>
+                      <mat-select [formControl]="mesEControl">
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option *ngFor="let mes of meses" [value]="mes">
+                          {{mes}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
                   <button mat-flat-button class="w-100 custom-search-button" (click)="panelOpenState = false"
                     matTooltip="Buscar">
                     <mat-icon class="me-2">search</mat-icon> Buscar
@@ -343,6 +409,21 @@
                   <button type="button" class="close-btn" (click)="clearFilter('fechaEntregaFin')">&times;</button>
                 </span>
 
+                <span *ngIf="yearsControl.value" class="badge">
+                  📅 Por año: {{ yearsControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('years')">&times;</button>
+                </span>
+
+                <span *ngIf="mesRControl.value" class="badge">
+                  📅 Mes de Registro: {{ mesRControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('mesR')">&times;</button>
+                </span>
+
+                <span *ngIf="mesEControl.value" class="badge">
+                  📅 Mes de Entrega: {{ mesEControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('mesE')">&times;</button>
+                </span>
+
               </div>
 
               <button *ngIf="hasFiltersApplied()" mat-flat-button class="w-100 btn-clear-filters"
@@ -397,7 +478,7 @@
                 </ng-container>
                 <ng-container matColumnDef="semana">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>Semana</th>
-                  <td mat-cell *matCellDef="let row">{{row.semana}}</td>
+                  <td mat-cell *matCellDef="let row">{{row.semana}} ({{row.years || '2025'}})</td>
                 </ng-container>
                 <ng-container matColumnDef="noContrato">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>No. Contrato</th>
@@ -408,10 +489,12 @@
                   <td mat-cell *matCellDef="let row">
                     {{row.trabajo}}
                     <div class="seguimiento-banner" *ngIf="row.trabajoAnterior">
-                      <strong>🟣 Trabajo de {{row?.trabajoAnterior?.semana}}.</strong>
+                      <strong>🟣 Trabajo de {{row?.trabajoAnterior?.semana}} ({{row?.trabajoAnterior?.years ||
+                        '2025'}}).</strong>
                     </div>
                     <div class="seguimiento-banner" *ngIf="row.trabajoReferencia">
-                      <strong>🟣 Seguimiento en {{row?.trabajoReferencia?.semana}}.</strong>
+                      <strong>🟣 Seguimiento en {{row?.trabajoReferencia?.semana}} ({{row?.trabajoReferencia?.years ||
+                        '2025'}}).</strong>
                     </div>
                   </td>
                 </ng-container>
@@ -500,16 +583,18 @@
             @for (pago of pagos; track pago.id) {
             <div class="col-12 mb-3">
               <div class="seguimiento-banner" *ngIf="pago.trabajoAnterior">
-                <strong>🟣 Trabajo de {{pago?.trabajoAnterior?.semana}}.</strong>
+                <strong>🟣 Trabajo de {{pago?.trabajoAnterior?.semana}} ({{pago?.trabajoAnterior?.years ||
+                  '2025'}}).</strong>
               </div>
               <div class="seguimiento-banner" *ngIf="pago.trabajoReferencia">
-                <strong>🟣 Seguimiento en {{pago?.trabajoReferencia?.semana}}.</strong>
+                <strong>🟣 Seguimiento en {{pago?.trabajoReferencia?.semana}} ({{pago?.trabajoReferencia?.years ||
+                  '2025'}}).</strong>
               </div>
               <mat-card class="shadow-sm rounded" [class.card-urgente]="pago.pagado === 'SI'"
                 [class.card-normal]="pago.pagado !== 'SI'">
                 <mat-card-header>
                   <mat-card-title class="text-primary fw-bold">
-                    {{ pago.semana }} - #{{ pago.noContrato }}
+                    {{ pago.semana }} - {{pago?.years || '2025'}} - #{{ pago.noContrato }}
                   </mat-card-title>
                   <mat-card-subtitle class="text-muted">{{pago.trabajo}}</mat-card-subtitle>
                 </mat-card-header>
@@ -572,3 +657,8 @@
     </div>
   </div>
 </section>
+
+<button *ngIf="showScrollTop" mat-fab color="primary" class="scroll-top-btn" (click)="scrollToTop()" style="width: 40px;
+    height: 40px;">
+  <mat-icon>keyboard_arrow_up</mat-icon>
+</button>
