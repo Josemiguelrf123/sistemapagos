@@ -468,6 +468,26 @@
             }
           </mat-menu>
           <div class="table-container">
+            <div class="row" style="text-align: center;">
+              <div class="col-4">
+                <h2 class="h5 m-0 text-muted small">Total Partida 1: <strong class="fw-bold text-primary fs-5">${{
+                    (totalPartida1 ||
+                    0).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2}) }}</strong></h2>
+              </div>
+              <div class="col-4">
+                <h2 class="h5 m-0 text-muted small">Total Partida 2: <strong class="fw-bold text-primary fs-5">${{
+                    (totalPartida2 ||
+                    0).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2}) }}</strong></h2>
+              </div>
+              <div class="col-4">
+                <h2 class="h5 m-0 text-muted small">Total Semana: <strong class="fw-bold text-primary fs-5">${{
+                    (totalGeneral ||
+                    0).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2}) }}</strong></h2>
+              </div>
+            </div>
             <div class="responsive-table-wrapper">
               @if (dataObs$ | async; as trabajos) {
               <table mat-table [dataSource]="trabajos" matSort class="compact-table">
@@ -579,6 +599,33 @@
           </div>
         </div>
         <div class="d-xl-none">
+          <div class="card p-3 shadow-sm border-0 bg-light">
+            <div class="d-flex flex-column flex-md-row gap-3">
+              <!-- Total Partida 1 -->
+              <div class="d-flex justify-content-between align-items-center w-100">
+                <span class="text-muted small">Total Partida 1:</span>
+                <span class="fw-bold text-primary fs-5">
+                  ${{ (totalPartida1 || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                </span>
+              </div>
+
+              <!-- Total Partida 2 -->
+              <div class="d-flex justify-content-between align-items-center w-100">
+                <span class="text-muted small">Total Partida 2:</span>
+                <span class="fw-bold text-primary fs-5">
+                  ${{ (totalPartida2 || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                </span>
+              </div>
+
+              <!-- Total Semana -->
+              <div class="d-flex justify-content-between align-items-center w-100">
+                <span class="text-muted small">Total Semana:</span>
+                <span class="fw-bold text-primary fs-5">
+                  ${{ (totalGeneral || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                </span>
+              </div>
+            </div>
+          </div>
           <div class="row">
             @for (pago of pagos; track pago.id) {
             <div class="col-12 mb-3">

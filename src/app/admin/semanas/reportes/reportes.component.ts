@@ -141,6 +141,9 @@ export class ReportesComponent {
   showScrollTop = false;
   anios: number[] = [];
   meses: string[] = [];
+  totalGeneral = 0;
+  totalPartida1 = 0;
+  totalPartida2 = 0;
 
   constructor(
     private db: FirestoreService,
@@ -192,42 +195,61 @@ export class ReportesComponent {
     });
   }
 
-  valoresUnicos(data: any, type: string) {
+  valoresUnicos(data: any[], type: string) {
     const mapaUnicos = new Map<string, string>();
+
     const capitalizar = (str: string): string =>
       str
         .toLowerCase()
         .split(' ')
-        .map((palabra) => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+        .map(p => p.charAt(0).toUpperCase() + p.slice(1))
         .join(' ');
 
     const normalizar = (texto: string): string =>
       texto
-        .normalize("NFD") // separa letras acentuadas
-        .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .trim()
         .toLowerCase();
 
     for (const item of data) {
       const original = item[type] || '';
-      if (original === '') continue
+      if (!original) continue;
+
       const clave = normalizar(original);
       if (!mapaUnicos.has(clave)) {
         mapaUnicos.set(clave, original.trim());
       }
     }
 
-
     const resultadoFinal = Array.from(mapaUnicos.values()).map(capitalizar);
-    const ordenadas = resultadoFinal.sort((a, b) => {
-      const numA = parseInt(a.replace(/\D/g, ""), 10);
-      const numB = parseInt(b.replace(/\D/g, ""), 10);
 
-      if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
-      return a.localeCompare(b);
+    const ordenadas = resultadoFinal.sort((a, b) => {
+      // Detectar formato: Semana X-YYYY
+      const regex = /semana\s*(\d+)-(\d{4})/i;
+
+      const matchA = a.match(regex);
+      const matchB = b.match(regex);
+
+      if (matchA && matchB) {
+        const semanaA = Number(matchA[1]);
+        const anioA = Number(matchA[2]);
+
+        const semanaB = Number(matchB[1]);
+        const anioB = Number(matchB[2]);
+
+        // 1️⃣ Ordenar por año DESC
+        if (anioA !== anioB) return anioB - anioA;
+
+        // 2️⃣ Ordenar por semana DESC
+        return semanaB - semanaA;
+      }
+
+      // Fallback para otros textos
+      return a.localeCompare(b, 'es', { numeric: true });
     });
 
-    return ordenadas
+    return ordenadas;
   }
 
   async getPagos() {
@@ -240,9 +262,30 @@ export class ReportesComponent {
       pagos[i].urgente ||= 'NO';
       pagos[i].placaBase ||= 'NO';
       pagos[i].pagado ||= 'NO';
+      pagos[i].semana = `${pagos[i].semana}-${pagos[i].years ?? '2025'}`
     }
     this.pagos = pagos;
     this.pagosFilter = this.pagos;
+    this.totalGeneral = this.pagos.reduce(
+      (sum: any, value: any) => sum + Number(value.totalPorCobrar),
+      0
+    );
+    this.totalPartida1 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 1'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
+    this.totalPartida2 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 2'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
     this.consultorios = this.valoresUnicos(pagos, 'consultorio');
     this.semanas = this.valoresUnicos(pagos, 'semana');
     this.tonos = this.valoresUnicos(pagos, 'tono');
@@ -479,6 +522,26 @@ export class ReportesComponent {
     }
 
     this.pagos = filteredData;
+    this.totalGeneral = this.pagos.reduce(
+      (sum: any, value: any) => sum + Number(value.totalPorCobrar),
+      0
+    );
+    this.totalPartida1 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 1'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
+    this.totalPartida2 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 2'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
     this.setPagination(this.pagos);
     this._changeDetectorRef.markForCheck();
   }
