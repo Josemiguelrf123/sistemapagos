@@ -1,11 +1,11 @@
-import { ChangeDetectorRef, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { NgClass, CommonModule, DatePipe } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { BreadcrumbComponent } from '@shared/components/breadcrumb/breadcrumb.component';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { Observable, Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Pago } from '../componentes/pago.model';
 import { FirestoreService } from '@core/service/firestore.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -61,14 +61,18 @@ declare module 'jspdf' {
     MatExpansionModule
   ],
 })
-export class ReportesComponent implements OnDestroy {
+export class ReportesComponent {
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    this.showScrollTop = window.scrollY > 300;
+  }
   @ViewChild(MatPaginator, { static: true })
   paginator!: MatPaginator;
   @ViewChild('filter', { static: true })
   filter!: ElementRef;
   dataSource!: MatTableDataSource<any>;
   id!: number;
-  subscriptions: Subscription = new Subscription();
+  // subscriptions: Subscription = new Subscription();
   pagos: Pago[] = [];
   pagosFilter: Pago[] = [];
   dataObs$!: Observable<any>;
@@ -84,6 +88,9 @@ export class ReportesComponent implements OnDestroy {
   fechaRegistroFinControl = new FormControl('');
   fechaEntregaInicioControl = new FormControl('');
   fechaEntregaFinControl = new FormControl('');
+  yearsControl = new FormControl('');
+  mesRControl = new FormControl('');
+  mesEControl = new FormControl('');
   tonoControl = new FormControl('');
   materialControl = new FormControl('');
 
@@ -131,88 +138,189 @@ export class ReportesComponent implements OnDestroy {
     'totalcobrar',
     'observaciones',
   ];
+  showScrollTop = false;
+  anios: number[] = [];
+  meses: string[] = [];
+  totalGeneral = 0;
+  totalPartida1 = 0;
+  totalPartida2 = 0;
 
   constructor(
     private db: FirestoreService,
     private _changeDetectorRef: ChangeDetectorRef,
   ) {
+    const anioActual = new Date().getFullYear();
+    for (let anio = 2025; anio <= anioActual; anio++) {
+      this.anios.push(anio);
+    }
+    this.meses = this.getMesesDesde2025();
     this.getPagos();
     this.setupFilterListeners();
   }
 
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
+  // ngOnDestroy(): void {
+  //   this.subscriptions.unsubscribe();
+  // }
+
+  getMesesDesde2025(): string[] {
+    const meses = [
+      'Enero', 'Febrero', 'Marzo', 'Abril',
+      'Mayo', 'Junio', 'Julio', 'Agosto',
+      'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+
+    const resultado: string[] = [];
+
+    const anioInicio = 2025;
+    const hoy = new Date();
+    const anioActual = hoy.getFullYear();
+    const mesActual = hoy.getMonth(); // 0 = enero
+
+    for (let anio = anioInicio; anio <= anioActual; anio++) {
+      const limiteMes =
+        anio === anioActual ? mesActual : 11;
+
+      for (let mes = 0; mes <= limiteMes; mes++) {
+        resultado.push(`${meses[mes]} ${anio}`);
+      }
+    }
+
+    return resultado.reverse();
   }
 
-  valoresUnicos(data: any, type: string) {
+  scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
+
+  valoresUnicos(data: any[], type: string) {
     const mapaUnicos = new Map<string, string>();
+
     const capitalizar = (str: string): string =>
       str
         .toLowerCase()
         .split(' ')
-        .map((palabra) => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+        .map(p => p.charAt(0).toUpperCase() + p.slice(1))
         .join(' ');
 
     const normalizar = (texto: string): string =>
       texto
-        .normalize("NFD") // separa letras acentuadas
-        .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .trim()
         .toLowerCase();
 
     for (const item of data) {
       const original = item[type] || '';
-      if (original === '') continue
+      if (!original) continue;
+
       const clave = normalizar(original);
       if (!mapaUnicos.has(clave)) {
         mapaUnicos.set(clave, original.trim());
       }
     }
 
-
     const resultadoFinal = Array.from(mapaUnicos.values()).map(capitalizar);
-    const ordenadas = resultadoFinal.sort((a, b) => {
-      const numA = parseInt(a.replace(/\D/g, ""), 10);
-      const numB = parseInt(b.replace(/\D/g, ""), 10);
 
-      if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
-      return a.localeCompare(b);
+    const ordenadas = resultadoFinal.sort((a, b) => {
+      // Detectar formato: Semana X-YYYY
+      const regex = /semana\s*(\d+)-(\d{4})/i;
+
+      const matchA = a.match(regex);
+      const matchB = b.match(regex);
+
+      if (matchA && matchB) {
+        const semanaA = Number(matchA[1]);
+        const anioA = Number(matchA[2]);
+
+        const semanaB = Number(matchB[1]);
+        const anioB = Number(matchB[2]);
+
+        // 1️⃣ Ordenar por año DESC
+        if (anioA !== anioB) return anioB - anioA;
+
+        // 2️⃣ Ordenar por semana DESC
+        return semanaB - semanaA;
+      }
+
+      // Fallback para otros textos
+      return a.localeCompare(b, 'es', { numeric: true });
     });
 
-    return ordenadas
+    return ordenadas;
   }
 
-  getPagos() {
-    const query = this.db.getCollOrderBy('pagos', 'semana', 'desc');
-    this.subscriptions.add(
-      query.subscribe({
-        next: async (pagos: Pago[]) => {
-          for (let i = 0; i < pagos.length; i++) {
-            pagos[i].trabajoAnterior ||= null;
-            pagos[i].trabajoReferencia ||= null;
-            pagos[i].urgente ||= 'NO';
-            pagos[i].placaBase ||= 'NO';
-            pagos[i].pagado ||= 'NO';
-          }
-          this.pagos = pagos;
-          this.pagosFilter = this.pagos;
-          this.consultorios = this.valoresUnicos(pagos, 'consultorio');
-          this.semanas = this.valoresUnicos(pagos, 'semana');
-          this.tonos = this.valoresUnicos(pagos, 'tono');
-          this.materiales = this.valoresUnicos(pagos, 'material');
-          // this.semanas = [...new Set(pagos.map((p: any) => p.semana))].sort((a: any, b: any) => {
-          //   // Ordenar semanas de más reciente a más antigua
-          //   const numA = parseInt(a.replace('semana ', ''));
-          //   const numB = parseInt(b.replace('semana ', ''));
-          //   return numB - numA;
-          // });
-          // this.tonos = [...new Set(pagos.map((p: any) => p.tono).filter((t: any) => t))];
-          // this.materiales = [...new Set(pagos.map((p: any) => p.material).filter((m: any) => m))];
-          this.setPagination(this.pagos);
-        },
-        error: (err: any) => console.log(err),
-      })
+  async getPagos() {
+    const pagos: any[] = [];
+    const collRef = await this.db.asyncCollOrderBy('pagos', 'fechaRegistro', 'desc');
+    collRef.forEach((doc) => pagos.push(doc.data()));
+    for (let i = 0; i < pagos.length; i++) {
+      pagos[i].trabajoAnterior ||= null;
+      pagos[i].trabajoReferencia ||= null;
+      pagos[i].urgente ||= 'NO';
+      pagos[i].placaBase ||= 'NO';
+      pagos[i].pagado ||= 'NO';
+      pagos[i].semana = `${pagos[i].semana}-${pagos[i].years ?? '2025'}`
+    }
+    this.pagos = pagos;
+    this.pagosFilter = this.pagos;
+    this.totalGeneral = this.pagos.reduce(
+      (sum: any, value: any) => sum + Number(value.totalPorCobrar),
+      0
     );
+    this.totalPartida1 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 1'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
+    this.totalPartida2 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 2'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
+    this.consultorios = this.valoresUnicos(pagos, 'consultorio');
+    this.semanas = this.valoresUnicos(pagos, 'semana');
+    this.tonos = this.valoresUnicos(pagos, 'tono');
+    this.materiales = this.valoresUnicos(pagos, 'material');
+    this.setPagination(this.pagos);
+    // const query = this.db.getCollOrderBy('pagos', 'semana', 'desc');
+    // this.subscriptions.add(
+    //   query.subscribe({
+    //     next: async (pagos: Pago[]) => {
+    //       for (let i = 0; i < pagos.length; i++) {
+    //         pagos[i].trabajoAnterior ||= null;
+    //         pagos[i].trabajoReferencia ||= null;
+    //         pagos[i].urgente ||= 'NO';
+    //         pagos[i].placaBase ||= 'NO';
+    //         pagos[i].pagado ||= 'NO';
+    //       }
+    //       this.pagos = pagos;
+    //       this.pagosFilter = this.pagos;
+    //       this.consultorios = this.valoresUnicos(pagos, 'consultorio');
+    //       this.semanas = this.valoresUnicos(pagos, 'semana');
+    //       this.tonos = this.valoresUnicos(pagos, 'tono');
+    //       this.materiales = this.valoresUnicos(pagos, 'material');
+    //       // this.semanas = [...new Set(pagos.map((p: any) => p.semana))].sort((a: any, b: any) => {
+    //       //   // Ordenar semanas de más reciente a más antigua
+    //       //   const numA = parseInt(a.replace('semana ', ''));
+    //       //   const numB = parseInt(b.replace('semana ', ''));
+    //       //   return numB - numA;
+    //       // });
+    //       // this.tonos = [...new Set(pagos.map((p: any) => p.tono).filter((t: any) => t))];
+    //       // this.materiales = [...new Set(pagos.map((p: any) => p.material).filter((m: any) => m))];
+    //       this.setPagination(this.pagos);
+    //     },
+    //     error: (err: any) => console.log(err),
+    //   })
+    // );
   }
 
   setupFilterListeners() {
@@ -227,8 +335,11 @@ export class ReportesComponent implements OnDestroy {
     this.fechaRegistroFinControl.valueChanges.subscribe(() => this.applyFilters());
     this.fechaEntregaInicioControl.valueChanges.subscribe(() => this.applyFilters());
     this.fechaEntregaFinControl.valueChanges.subscribe(() => this.applyFilters());
+    this.yearsControl.valueChanges.subscribe(() => this.applyFilters());
     this.tonoControl.valueChanges.subscribe(() => this.applyFilters());
     this.materialControl.valueChanges.subscribe(() => this.applyFilters());
+    this.mesRControl.valueChanges.subscribe(() => this.applyFilters());
+    this.mesEControl.valueChanges.subscribe(() => this.applyFilters());
   }
 
   normalizarTexto(texto: string): string {
@@ -236,6 +347,39 @@ export class ReportesComponent implements OnDestroy {
       .normalize('NFD') // Separa los caracteres base de sus acentos
       .replace(/[\u0300-\u036f]/g, '') // Elimina los diacríticos
       .toLowerCase();
+  }
+
+  getRangoMes(mesAnio: string): { inicio: Date; fin: Date } {
+    const mesesMap: Record<string, number> = {
+      enero: 0,
+      febrero: 1,
+      marzo: 2,
+      abril: 3,
+      mayo: 4,
+      junio: 5,
+      julio: 6,
+      agosto: 7,
+      septiembre: 8,
+      octubre: 9,
+      noviembre: 10,
+      diciembre: 11
+    };
+
+    const [mesTexto, anioTexto] = mesAnio.split(' ');
+    const mes = mesesMap[mesTexto.toLowerCase()];
+    const anio = Number(anioTexto);
+
+    if (mes === undefined || isNaN(anio)) {
+      throw new Error('Formato inválido. Usa "Enero 2025"');
+    }
+
+    // Primer día del mes
+    const inicio = new Date(anio, mes, 1, 0, 0, 0, 0);
+
+    // Último día del mes
+    const fin = new Date(anio, mes + 1, 0, 23, 59, 59, 999);
+
+    return { inicio, fin };
   }
 
   applyFilters() {
@@ -341,8 +485,65 @@ export class ReportesComponent implements OnDestroy {
       });
     }
 
+    // Filtro por years
+    if (this.yearsControl.value) {
+      const searchTerm = this.yearsControl.value;
+      filteredData = filteredData.filter(pago =>
+        (String(pago.years) || '').includes(searchTerm)
+      );
+    }
+
+    // Filtro por mes de registro
+    if (this.mesRControl.value) {
+      const searchTerm = this.mesRControl.value;
+      const { inicio, fin } = this.getRangoMes(searchTerm);
+      filteredData = filteredData.filter(pago => {
+        if (!pago.fechaRegistro?.seconds) return false;
+        const registroMs = pago.fechaRegistro.seconds * 1000;
+        return (
+          registroMs >= inicio.getTime() &&
+          registroMs <= fin.getTime()
+        );
+      });
+    }
+
+    // Filtro por mes de entrega
+    if (this.mesEControl.value) {
+      const searchTerm = this.mesEControl.value;
+      const { inicio, fin } = this.getRangoMes(searchTerm);
+      filteredData = filteredData.filter(pago => {
+        if (!pago.fechaEntrega?.seconds) return false;
+        const registroMs = pago.fechaEntrega.seconds * 1000;
+        return (
+          registroMs >= inicio.getTime() &&
+          registroMs <= fin.getTime()
+        );
+      });
+    }
+
     this.pagos = filteredData;
+    this.totalGeneral = this.pagos.reduce(
+      (sum: any, value: any) => sum + Number(value.totalPorCobrar),
+      0
+    );
+    this.totalPartida1 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 1'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
+    this.totalPartida2 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 2'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
     this.setPagination(this.pagos);
+    this._changeDetectorRef.markForCheck();
   }
 
   resetFilters() {
@@ -356,10 +557,16 @@ export class ReportesComponent implements OnDestroy {
     this.fechaRegistroFinControl.reset('');
     this.fechaEntregaInicioControl.reset('');
     this.fechaEntregaFinControl.reset('');
+    this.yearsControl.reset('');
     this.tonoControl.reset('');
     this.materialControl.reset('');
+    this.mesRControl.reset('');
+    this.mesEControl.reset('');
     this.pagos = [...this.pagosFilter];
+    this.panelOpenState = false;
     this.setPagination(this.pagos);
+
+    this._changeDetectorRef.markForCheck();
   }
 
   setPagination(tableData: Pago[]) {
@@ -395,7 +602,7 @@ export class ReportesComponent implements OnDestroy {
     ];
 
     const body = pagosFilter.map(pago => [
-      pago.semana || '',
+      `${pago.semana || ''} (${pago.years || '2025'})`,
       pago.noContrato || '',
       pago.consultorio || '',
       pago.trabajo || '',
@@ -470,7 +677,7 @@ export class ReportesComponent implements OnDestroy {
     shareText += '--------------------------------\n\n';
     // Agregar cada trabajo al texto
     pagosFilter.forEach((pago, index) => {
-      shareText += `*Semana*: ${pago.semana || 'N/A'}\n`;
+      shareText += `*Semana*: ${pago.semana || 'N/A'} - ${pago.years || '2025'}\n`;
       shareText += `*No. Contrato*: ${pago.noContrato || 'N/A'}\n`;
       shareText += `*Consultorio*: ${pago.consultorio || 'N/A'}\n`;
       shareText += `*Trabajo*: ${pago.trabajo || ''} ${pago.placaBase.toLowerCase() === 'si' ? ', con placa base' : ''} ${pago.urgente.toLowerCase() === 'si' ? 'y fue urgente' : ''} (*${pago.pruebaTerminada ? pago.pruebaTerminada.charAt(0).toUpperCase() + pago.pruebaTerminada.slice(1).toLowerCase() : 'Terminada'}*)\n`;
@@ -498,4 +705,81 @@ export class ReportesComponent implements OnDestroy {
     window.open(`https://wa.me/?text=${encodedText}`, '_blank');
   }
 
+  hasFiltersApplied(): boolean {
+    // Para valores string, chequea que no estén vacíos o solo espacios
+    const isNonEmptyString = (val: any) => typeof val === 'string' && val.trim().length > 0;
+
+    // Para valores no string, considera que null, undefined o '' es "sin filtro"
+    const isValidValue = (val: any) => val !== null && val !== undefined && val !== '';
+
+    return (
+      isNonEmptyString(this.searchControl.value) ||
+      isNonEmptyString(this.consultorioControl.value) ||
+      isNonEmptyString(this.semanaControl.value) ||
+      isValidValue(this.estadoControl.value) ||
+      isValidValue(this.pagadoControl.value) ||
+      isValidValue(this.urgenteControl.value) ||
+      isNonEmptyString(this.tonoControl.value) ||
+      isNonEmptyString(this.materialControl.value) ||
+      isValidValue(this.fechaRegistroInicioControl.value) ||
+      isValidValue(this.fechaRegistroFinControl.value) ||
+      isValidValue(this.fechaEntregaInicioControl.value) ||
+      isValidValue(this.fechaEntregaFinControl.value) ||
+      isValidValue(this.yearsControl.value) ||
+      isValidValue(this.mesRControl.value) ||
+      isValidValue(this.mesEControl.value)
+    );
+  }
+
+  clearFilter(filterName: string) {
+    switch (filterName) {
+      case 'search':
+        this.searchControl.reset('');
+        break;
+      case 'consultorio':
+        this.consultorioControl.reset('');
+        break;
+      case 'semana':
+        this.semanaControl.reset('');
+        break;
+      case 'estado':
+        this.estadoControl.reset('');
+        break;
+      case 'pagado':
+        this.pagadoControl.reset('');
+        break;
+      case 'urgente':
+        this.urgenteControl.reset('');
+        break;
+      case 'tono':
+        this.tonoControl.reset('');
+        break;
+      case 'material':
+        this.materialControl.reset('');
+        break;
+      case 'fechaRegistroInicio':
+        this.fechaRegistroInicioControl.reset('');
+        break;
+      case 'fechaRegistroFin':
+        this.fechaRegistroFinControl.reset('');
+        break;
+      case 'fechaEntregaInicio':
+        this.fechaEntregaInicioControl.reset('');
+        break;
+      case 'fechaEntregaFin':
+        this.fechaEntregaFinControl.reset('');
+        break;
+      case 'years':
+        this.yearsControl.reset('');
+        break;
+      case 'mesR':
+        this.mesRControl.reset('');
+        break;
+      case 'mesE':
+        this.mesEControl.reset('');
+        break;
+    }
+
+    this.applyFilters();
+  }
 }

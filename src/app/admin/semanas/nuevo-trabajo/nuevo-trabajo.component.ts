@@ -89,6 +89,7 @@ export class NuevoTrabajoComponent {
   ];
   selectedItemOriginal: any = null;
   selectedItem: any = null;
+  anioActual!: number;
 
   constructor(
     private fb: UntypedFormBuilder,
@@ -98,7 +99,6 @@ export class NuevoTrabajoComponent {
     private route: ActivatedRoute
   ) {
     this.getPagos();
-    this.getValueSemanas();
     this.getValueTrabajos();
     this.getValueTonos();
     this.getValueConsultorios();
@@ -106,11 +106,68 @@ export class NuevoTrabajoComponent {
     this.route.params.subscribe(({ id }) => this.validarId(id));
   }
 
+  // async guardar() {
+  //   const data: any = []
+
+  //   const convertirFecha = (obj: any, campo: string) => {
+  //     if (obj?.[campo]?.seconds) {
+  //       obj[campo] = new Date(obj[campo].seconds * 1000);
+  //     }
+  //   };
+  //   for (let i = 0; i < data.length; i++) {
+
+  //     // Fechas principales
+  //     convertirFecha(data[i], 'create_at');
+  //     convertirFecha(data[i], 'fechaRegistro');
+  //     convertirFecha(data[i], 'fechaEntrega');
+
+  //     // Trabajo anterior
+  //     if (data[i]?.trabajoAnterior) {
+  //       convertirFecha(data[i].trabajoAnterior, 'createAt');
+  //       convertirFecha(data[i].trabajoAnterior, 'fechaRegistro');
+  //       convertirFecha(data[i].trabajoAnterior, 'fechaEntrega');
+  //     }
+
+  //     // Trabajo referencia
+  //     if (data[i]?.trabajoReferencia) {
+  //       convertirFecha(data[i].trabajoReferencia, 'createAt');
+  //       convertirFecha(data[i].trabajoReferencia, 'fechaRegistro');
+  //       convertirFecha(data[i].trabajoReferencia, 'fechaEntrega');
+  //     }
+
+  //     await this.db.createDoc(
+  //       data[i],
+  //       'pagos',
+  //       data[i].id
+  //     );
+
+  //     console.log('terminado--', i, 'De----', data.length);
+  //   }
+  //   console.log('termino------------------');
+  // }
+
   async getValueSemanas() {
+    //  const data: any[] = [];
+    // const collRef1 = await this.db.asyncColl(
+    //   'semanas',
+    // );
+    // collRef1.forEach((doc) => data.push(doc.data()));
+    // for (const d of data){
+    //   await this.db.updateDoc({ years: 2025 }, 'semanas', d.id);
+    // }
+    // console.log(data);
+    // return
     this.semanas = [];
 
     const dataSemanas: any[] = [];
-    const collRef = await this.db.asyncCollOrderBy('semanas', 'nombre', 'desc');
+    const collRef = await this.db.asyncCollWhereOrderBy(
+      'semanas',
+      'years',
+      '==',
+      this.anioActual,
+      'nombre',
+      'desc'
+    );
     collRef.forEach((doc) => dataSemanas.push(doc.data()));
 
     // 🧼 Normaliza: sin tildes, minúsculas, trim
@@ -373,9 +430,11 @@ export class NuevoTrabajoComponent {
     if (id !== 'agregar') {
       this.obtenerInformacion(id);
     } else {
+      this.anioActual = new Date().getFullYear();
       const blankObject = {} as Pago;
       this.pago = new Pago(blankObject);
       this.crearFormulario();
+      this.getValueSemanas();
     }
   }
 
@@ -386,6 +445,7 @@ export class NuevoTrabajoComponent {
       this.pago.partida ||= 'Partida 1';
       this.pago.trabajoAnterior ||= null;
       this.pago.fechaEntrega ||= '';
+      this.anioActual = this.pago.years;
       this.edit = true;
       if (this.pago.fechaRegistro) {
         this.pago.fechaRegistro = new Date(
@@ -399,6 +459,7 @@ export class NuevoTrabajoComponent {
       }
       this.selectedItem = this.pago.trabajoAnterior;
       this.selectedItemOriginal = JSON.parse(JSON.stringify(this.pago.trabajoAnterior));
+      this.getValueSemanas();
       this.crearFormulario();
     } catch (error) {
       console.log(error);
@@ -453,6 +514,7 @@ export class NuevoTrabajoComponent {
       totalPorCobrar: [this.pago.totalPorCobrar],
       pagado: [this.pago.pagado],
       observaciones: [this.pago.observaciones],
+      years: [this.pago.years],
     });
   }
 
@@ -540,7 +602,7 @@ export class NuevoTrabajoComponent {
     ) {
       const id = this.db.getId();
       await this.db.createDoc(
-        { nombre: datos.semana, create_at: new Date(), id },
+        { nombre: datos.semana, create_at: new Date(), years: this.anioActual, id },
         'semanas',
         id
       );

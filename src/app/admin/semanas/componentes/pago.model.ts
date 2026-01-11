@@ -18,6 +18,7 @@ export class Pago {
   trabajoAnterior: null | Pago;
   trabajoReferencia: null | Pago;
   partida: string;
+  years: number;
 
   constructor(pago: Pago) {
     {
@@ -40,6 +41,7 @@ export class Pago {
       this.trabajoAnterior = pago.trabajoAnterior || null;
       this.trabajoReferencia = pago.trabajoReferencia || null;
       this.partida = pago.partida || '';
+      this.years = pago.years || new Date().getFullYear();
     }
   }
 }

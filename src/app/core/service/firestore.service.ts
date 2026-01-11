@@ -290,7 +290,7 @@ export class FirestoreService {
     path: string,
     field: string,
     condition: WhereFilterOp,
-    search: string | boolean,
+    search: string | number | boolean,
     fieldOrder: string,
     order: OrderByDirection
   ) {

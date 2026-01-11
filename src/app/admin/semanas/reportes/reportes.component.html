@@ -4,22 +4,6 @@
       <!-- breadcrumb -->
       <app-breadcrumb [title]="'Semanas'" [active_item]="'Reportes'"></app-breadcrumb>
     </div>
-    <div class="mt-2 mt-md-0" style="    justify-items: end;
-">
-      <ul class="tbl-export-btn d-flex align-items-center gap-2">
-        <li class="tbl-header-btn">
-          <div class="m-l-10" matTooltip="ADD">
-            <button class="mx-2" mat-mini-fab color="primary" matTooltip="Generar PDF" (click)="generatePDF()">
-              <mat-icon class="col-white">picture_as_pdf</mat-icon>
-            </button>
-
-            <button class="mx-2" mat-mini-fab color="primary" matTooltip="Compartir" (click)="shareViaWhatsApp()">
-              <mat-icon class="col-white">share</mat-icon>
-            </button>
-          </div>
-        </li>
-      </ul>
-    </div>
     <div class="row">
       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
         <!-- Filtros para desktop -->
@@ -152,6 +136,39 @@
                   <mat-datepicker #pickerEntregaFin></mat-datepicker>
                 </mat-form-field>
               </div>
+              <div class="col-md-4 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Por año</mat-label>
+                  <mat-select [formControl]="yearsControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let years of anios" [value]="years">
+                      {{years}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-md-4 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Mes Fecha Registro</mat-label>
+                  <mat-select [formControl]="mesRControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let mes of meses" [value]="mes">
+                      {{mes}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-md-4 mb-2">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Mes Fecha Entrega</mat-label>
+                  <mat-select [formControl]="mesEControl">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let mes of meses" [value]="mes">
+                      {{mes}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
               <div class="col-md-2 mb-2 d-flex align-items-center">
                 <button mat-stroked-button color="warn" class="w-100" (click)="resetFilters()">
                   <mat-icon>clear</mat-icon> Limpiar
@@ -163,135 +180,274 @@
 
         <!-- Filtros para móvil -->
         <div class="d-xl-none mb-3">
-          <mat-expansion-panel [(expanded)]="panelOpenState">
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                <mat-icon>filter_list</mat-icon>
-                Filtros
-              </mat-panel-title>
-            </mat-expansion-panel-header>
 
-            <div class="row">
-              <mat-form-field appearance="outline" class="w-100 mb-2">
+          <div class="card">
+            <div class="body">
+              <mat-form-field appearance="outline" class="w-100">
                 <mat-label>Buscar</mat-label>
                 <input matInput [formControl]="searchControl" placeholder="No. contrato, trabajo, consultorio...">
                 <mat-icon matSuffix>search</mat-icon>
               </mat-form-field>
-              <div class="col-sm-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Consultorio</mat-label>
-                  <mat-select [formControl]="consultorioControl">
-                    <mat-option value="">Todos</mat-option>
-                    <mat-option *ngFor="let consultorio of consultorios" [value]="consultorio">
-                      {{consultorio}}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
+              <mat-expansion-panel [(expanded)]="panelOpenState">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon>filter_list</mat-icon>
+                    Más filtros
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+
+                <div class="row">
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Consultorio</mat-label>
+                      <mat-select [formControl]="consultorioControl">
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option *ngFor="let consultorio of consultorios" [value]="consultorio">
+                          {{consultorio}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2 col-sm-3">
+                      <mat-label>Semana</mat-label>
+                      <mat-select [formControl]="semanaControl">
+                        <mat-option value="">Todas</mat-option>
+                        <mat-option *ngFor="let semana of semanas" [value]="semana">
+                          {{semana}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2 col-sm-3">
+                      <mat-label>Estado</mat-label>
+                      <mat-select [formControl]="estadoControl">
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option *ngFor="let estado of estados" [value]="estado">
+                          {{estado | titlecase}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Pagado</mat-label>
+                      <mat-select [formControl]="pagadoControl">
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option *ngFor="let option of pagadoOptions" [value]="option">
+                          {{option}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Urgente</mat-label>
+                      <mat-select [formControl]="urgenteControl">
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option *ngFor="let option of urgenteOptions" [value]="option">
+                          {{option}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Tono</mat-label>
+                      <mat-select [formControl]="tonoControl">
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option *ngFor="let tono of tonos" [value]="tono">
+                          {{tono}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Material</mat-label>
+                      <mat-select [formControl]="materialControl">
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option *ngFor="let material of materiales" [value]="material">
+                          {{material}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Fecha Registro (inicio)</mat-label>
+                      <input matInput [matDatepicker]="pickerRegistroInicioMobile"
+                        [formControl]="fechaRegistroInicioControl">
+                      <mat-datepicker-toggle matSuffix [for]="pickerRegistroInicioMobile"></mat-datepicker-toggle>
+                      <mat-datepicker #pickerRegistroInicioMobile></mat-datepicker>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Fecha Registro (fin)</mat-label>
+                      <input matInput [matDatepicker]="pickerRegistroFinMobile" [formControl]="fechaRegistroFinControl">
+                      <mat-datepicker-toggle matSuffix [for]="pickerRegistroFinMobile"></mat-datepicker-toggle>
+                      <mat-datepicker #pickerRegistroFinMobile></mat-datepicker>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Fecha Entrega (inicio)</mat-label>
+                      <input matInput [matDatepicker]="pickerEntregaInicioMobile"
+                        [formControl]="fechaEntregaInicioControl">
+                      <mat-datepicker-toggle matSuffix [for]="pickerEntregaInicioMobile"></mat-datepicker-toggle>
+                      <mat-datepicker #pickerEntregaInicioMobile></mat-datepicker>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Fecha Entrega (fin)</mat-label>
+                      <input matInput [matDatepicker]="pickerEntregaFinMobile" [formControl]="fechaEntregaFinControl">
+                      <mat-datepicker-toggle matSuffix [for]="pickerEntregaFinMobile"></mat-datepicker-toggle>
+                      <mat-datepicker #pickerEntregaFinMobile></mat-datepicker>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Por año</mat-label>
+                      <mat-select [formControl]="yearsControl">
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option *ngFor="let years of anios" [value]="years">
+                          {{years}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Mes Fecha Registro</mat-label>
+                      <mat-select [formControl]="mesRControl">
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option *ngFor="let mes of meses" [value]="mes">
+                          {{mes}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-sm-4">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Mes Fecha Entrega</mat-label>
+                      <mat-select [formControl]="mesEControl">
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option *ngFor="let mes of meses" [value]="mes">
+                          {{mes}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <button mat-flat-button class="w-100 custom-search-button" (click)="panelOpenState = false"
+                    matTooltip="Buscar">
+                    <mat-icon class="me-2">search</mat-icon> Buscar
+                  </button>
+                </div>
+              </mat-expansion-panel>
+              <div class="filter-badges">
+
+                <span *ngIf="searchControl.value?.trim()" class="badge">
+                  🔍 {{ searchControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('search')">&times;</button>
+                </span>
+
+                <span *ngIf="consultorioControl.value?.trim()" class="badge">
+                  🏥 consultorio {{ consultorioControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('consultorio')">&times;</button>
+                </span>
+
+                <span *ngIf="semanaControl.value?.trim()" class="badge">
+                  📅 {{ semanaControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('semana')">&times;</button>
+                </span>
+
+                <span *ngIf="estadoControl.value" class="badge">
+                  📋 {{ estadoControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('estado')">&times;</button>
+                </span>
+
+                <span *ngIf="pagadoControl.value" class="badge">
+                  💰 pagado: {{ pagadoControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('pagado')">&times;</button>
+                </span>
+
+                <span *ngIf="urgenteControl.value" class="badge">
+                  ⚠️urgente: {{ urgenteControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('urgente')">&times;</button>
+                </span>
+
+                <span *ngIf="tonoControl.value?.trim()" class="badge">
+                  tono: {{ tonoControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('tono')">&times;</button>
+                </span>
+
+                <span *ngIf="materialControl.value?.trim()" class="badge">
+                  🧰 material: {{ materialControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('material')">&times;</button>
+                </span>
+
+                <span *ngIf="fechaRegistroInicioControl.value" class="badge">
+                  📅 Registro desde: {{ fechaRegistroInicioControl.value | date:'shortDate' }}
+                  <button type="button" class="close-btn" (click)="clearFilter('fechaRegistroInicio')">&times;</button>
+                </span>
+
+                <span *ngIf="fechaRegistroFinControl.value" class="badge">
+                  📅 Registro hasta: {{ fechaRegistroFinControl.value | date:'shortDate' }}
+                  <button type="button" class="close-btn" (click)="clearFilter('fechaRegistroFin')">&times;</button>
+                </span>
+
+                <span *ngIf="fechaEntregaInicioControl.value" class="badge">
+                  🚚 Entrega desde: {{ fechaEntregaInicioControl.value | date:'shortDate' }}
+                  <button type="button" class="close-btn" (click)="clearFilter('fechaEntregaInicio')">&times;</button>
+                </span>
+
+                <span *ngIf="fechaEntregaFinControl.value" class="badge">
+                  🚚 Entrega hasta: {{ fechaEntregaFinControl.value | date:'shortDate' }}
+                  <button type="button" class="close-btn" (click)="clearFilter('fechaEntregaFin')">&times;</button>
+                </span>
+
+                <span *ngIf="yearsControl.value" class="badge">
+                  📅 Por año: {{ yearsControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('years')">&times;</button>
+                </span>
+
+                <span *ngIf="mesRControl.value" class="badge">
+                  📅 Mes de Registro: {{ mesRControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('mesR')">&times;</button>
+                </span>
+
+                <span *ngIf="mesEControl.value" class="badge">
+                  📅 Mes de Entrega: {{ mesEControl.value }}
+                  <button type="button" class="close-btn" (click)="clearFilter('mesE')">&times;</button>
+                </span>
+
               </div>
-              <div class="col-sm-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2 col-sm-3">
-                  <mat-label>Semana</mat-label>
-                  <mat-select [formControl]="semanaControl">
-                    <mat-option value="">Todas</mat-option>
-                    <mat-option *ngFor="let semana of semanas" [value]="semana">
-                      {{semana}}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              <div class="col-sm-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2 col-sm-3">
-                  <mat-label>Estado</mat-label>
-                  <mat-select [formControl]="estadoControl">
-                    <mat-option value="">Todos</mat-option>
-                    <mat-option *ngFor="let estado of estados" [value]="estado">
-                      {{estado | titlecase}}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              <div class="col-sm-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Pagado</mat-label>
-                  <mat-select [formControl]="pagadoControl">
-                    <mat-option value="">Todos</mat-option>
-                    <mat-option *ngFor="let option of pagadoOptions" [value]="option">
-                      {{option}}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              <div class="col-sm-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Urgente</mat-label>
-                  <mat-select [formControl]="urgenteControl">
-                    <mat-option value="">Todos</mat-option>
-                    <mat-option *ngFor="let option of urgenteOptions" [value]="option">
-                      {{option}}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              <div class="col-sm-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Tono</mat-label>
-                  <mat-select [formControl]="tonoControl">
-                    <mat-option value="">Todos</mat-option>
-                    <mat-option *ngFor="let tono of tonos" [value]="tono">
-                      {{tono}}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              <div class="col-sm-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Material</mat-label>
-                  <mat-select [formControl]="materialControl">
-                    <mat-option value="">Todos</mat-option>
-                    <mat-option *ngFor="let material of materiales" [value]="material">
-                      {{material}}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              <div class="col-sm-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Fecha Registro (inicio)</mat-label>
-                  <input matInput [matDatepicker]="pickerRegistroInicioMobile"
-                    [formControl]="fechaRegistroInicioControl">
-                  <mat-datepicker-toggle matSuffix [for]="pickerRegistroInicioMobile"></mat-datepicker-toggle>
-                  <mat-datepicker #pickerRegistroInicioMobile></mat-datepicker>
-                </mat-form-field>
-              </div>
-              <div class="col-sm-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Fecha Registro (fin)</mat-label>
-                  <input matInput [matDatepicker]="pickerRegistroFinMobile" [formControl]="fechaRegistroFinControl">
-                  <mat-datepicker-toggle matSuffix [for]="pickerRegistroFinMobile"></mat-datepicker-toggle>
-                  <mat-datepicker #pickerRegistroFinMobile></mat-datepicker>
-                </mat-form-field>
-              </div>
-              <div class="col-sm-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Fecha Entrega (inicio)</mat-label>
-                  <input matInput [matDatepicker]="pickerEntregaInicioMobile" [formControl]="fechaEntregaInicioControl">
-                  <mat-datepicker-toggle matSuffix [for]="pickerEntregaInicioMobile"></mat-datepicker-toggle>
-                  <mat-datepicker #pickerEntregaInicioMobile></mat-datepicker>
-                </mat-form-field>
-              </div>
-              <div class="col-sm-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Fecha Entrega (fin)</mat-label>
-                  <input matInput [matDatepicker]="pickerEntregaFinMobile" [formControl]="fechaEntregaFinControl">
-                  <mat-datepicker-toggle matSuffix [for]="pickerEntregaFinMobile"></mat-datepicker-toggle>
-                  <mat-datepicker #pickerEntregaFinMobile></mat-datepicker>
-                </mat-form-field>
-              </div>
-              <div class="col-sm-4"><button mat-stroked-button color="warn" class="w-100" (click)="resetFilters()">
-                  <mat-icon>clear</mat-icon> Limpiar filtros
-                </button></div>
+
+              <button *ngIf="hasFiltersApplied()" mat-flat-button class="w-100 btn-clear-filters"
+                (click)="resetFilters()" matTooltip="Limpiar filtros">
+                <mat-icon class="me-2">clear</mat-icon> Limpiar filtros
+              </button>
             </div>
-          </mat-expansion-panel>
+          </div>
+
+        </div>
+        <div class="mt-2 mt-md-0" style="justify-items: end;">
+          <ul class="tbl-export-btn d-flex align-items-center gap-2">
+            <li class="tbl-header-btn">
+              <div class="m-l-10" matTooltip="ADD">
+                <button class="mx-2" mat-mini-fab color="primary" matTooltip="Generar PDF" (click)="generatePDF()">
+                  <mat-icon class="col-white">picture_as_pdf</mat-icon>
+                </button>
+
+                <button class="mx-2" mat-mini-fab color="primary" matTooltip="Compartir" (click)="shareViaWhatsApp()">
+                  <mat-icon class="col-white">share</mat-icon>
+                </button>
+              </div>
+            </li>
+          </ul>
         </div>
         <div class="card d-none d-xl-block">
           <div class="column-toggle-button d-none d-md-inline-block">
@@ -312,6 +468,26 @@
             }
           </mat-menu>
           <div class="table-container">
+            <div class="row" style="text-align: center;">
+              <div class="col-4">
+                <h2 class="h5 m-0 text-muted small">Total Partida 1: <strong class="fw-bold text-primary fs-5">${{
+                    (totalPartida1 ||
+                    0).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2}) }}</strong></h2>
+              </div>
+              <div class="col-4">
+                <h2 class="h5 m-0 text-muted small">Total Partida 2: <strong class="fw-bold text-primary fs-5">${{
+                    (totalPartida2 ||
+                    0).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2}) }}</strong></h2>
+              </div>
+              <div class="col-4">
+                <h2 class="h5 m-0 text-muted small">Total Semana: <strong class="fw-bold text-primary fs-5">${{
+                    (totalGeneral ||
+                    0).toLocaleString('es-MX',
+                    {minimumFractionDigits: 2}) }}</strong></h2>
+              </div>
+            </div>
             <div class="responsive-table-wrapper">
               @if (dataObs$ | async; as trabajos) {
               <table mat-table [dataSource]="trabajos" matSort class="compact-table">
@@ -322,7 +498,7 @@
                 </ng-container>
                 <ng-container matColumnDef="semana">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>Semana</th>
-                  <td mat-cell *matCellDef="let row">{{row.semana}}</td>
+                  <td mat-cell *matCellDef="let row">{{row.semana}} ({{row.years || '2025'}})</td>
                 </ng-container>
                 <ng-container matColumnDef="noContrato">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>No. Contrato</th>
@@ -332,6 +508,14 @@
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>Trabajo</th>
                   <td mat-cell *matCellDef="let row">
                     {{row.trabajo}}
+                    <div class="seguimiento-banner" *ngIf="row.trabajoAnterior">
+                      <strong>🟣 Trabajo de {{row?.trabajoAnterior?.semana}} ({{row?.trabajoAnterior?.years ||
+                        '2025'}}).</strong>
+                    </div>
+                    <div class="seguimiento-banner" *ngIf="row.trabajoReferencia">
+                      <strong>🟣 Seguimiento en {{row?.trabajoReferencia?.semana}} ({{row?.trabajoReferencia?.years ||
+                        '2025'}}).</strong>
+                    </div>
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="consultorio">
@@ -415,14 +599,49 @@
           </div>
         </div>
         <div class="d-xl-none">
+          <div class="card p-3 shadow-sm border-0 bg-light">
+            <div class="d-flex flex-column flex-md-row gap-3">
+              <!-- Total Partida 1 -->
+              <div class="d-flex justify-content-between align-items-center w-100">
+                <span class="text-muted small">Total Partida 1:</span>
+                <span class="fw-bold text-primary fs-5">
+                  ${{ (totalPartida1 || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                </span>
+              </div>
+
+              <!-- Total Partida 2 -->
+              <div class="d-flex justify-content-between align-items-center w-100">
+                <span class="text-muted small">Total Partida 2:</span>
+                <span class="fw-bold text-primary fs-5">
+                  ${{ (totalPartida2 || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                </span>
+              </div>
+
+              <!-- Total Semana -->
+              <div class="d-flex justify-content-between align-items-center w-100">
+                <span class="text-muted small">Total Semana:</span>
+                <span class="fw-bold text-primary fs-5">
+                  ${{ (totalGeneral || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
+                </span>
+              </div>
+            </div>
+          </div>
           <div class="row">
             @for (pago of pagos; track pago.id) {
             <div class="col-12 mb-3">
+              <div class="seguimiento-banner" *ngIf="pago.trabajoAnterior">
+                <strong>🟣 Trabajo de {{pago?.trabajoAnterior?.semana}} ({{pago?.trabajoAnterior?.years ||
+                  '2025'}}).</strong>
+              </div>
+              <div class="seguimiento-banner" *ngIf="pago.trabajoReferencia">
+                <strong>🟣 Seguimiento en {{pago?.trabajoReferencia?.semana}} ({{pago?.trabajoReferencia?.years ||
+                  '2025'}}).</strong>
+              </div>
               <mat-card class="shadow-sm rounded" [class.card-urgente]="pago.pagado === 'SI'"
                 [class.card-normal]="pago.pagado !== 'SI'">
                 <mat-card-header>
                   <mat-card-title class="text-primary fw-bold">
-                    {{ pago.semana }} - #{{ pago.noContrato }}
+                    {{ pago.semana }} - {{pago?.years || '2025'}} - #{{ pago.noContrato }}
                   </mat-card-title>
                   <mat-card-subtitle class="text-muted">{{pago.trabajo}}</mat-card-subtitle>
                 </mat-card-header>
@@ -485,3 +704,8 @@
     </div>
   </div>
 </section>
+
+<button *ngIf="showScrollTop" mat-fab color="primary" class="scroll-top-btn" (click)="scrollToTop()" style="width: 40px;
+    height: 40px;">
+  <mat-icon>keyboard_arrow_up</mat-icon>
+</button>

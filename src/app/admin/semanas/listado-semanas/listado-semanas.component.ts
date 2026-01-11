@@ -1,11 +1,12 @@
-import { ChangeDetectorRef, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
 import { NgClass, CommonModule, DatePipe } from '@angular/common';
 import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
 import { BreadcrumbComponent } from '@shared/components/breadcrumb/breadcrumb.component';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { Observable, Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Pago } from '../componentes/pago.model';
 import { FirestoreService } from '@core/service/firestore.service';
 import { Router } from '@angular/router';
@@ -53,17 +54,18 @@ declare module 'jspdf' {
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     FeatherIconsComponent
   ],
 })
-export class ListadoSemanasComponent implements OnDestroy {
+export class ListadoSemanasComponent {
   @ViewChild(MatPaginator, { static: true })
   paginator!: MatPaginator;
   @ViewChild('filter', { static: true })
   filter!: ElementRef;
   dataSource!: MatTableDataSource<any>;
   id!: number;
-  subscriptions: Subscription = new Subscription();
+  // subscriptions: Subscription = new Subscription();
   pagosTodos: Pago[] = [];
   pagos: Pago[] = [];
   pagosFilter: Pago[] = [];
@@ -110,6 +112,9 @@ export class ListadoSemanasComponent implements OnDestroy {
   totalGeneral = 0;
   totalPartida1 = 0;
   totalPartida2 = 0;
+  anios: number[] = [];
+  anioSeleccionado!: number;
+  selectedTabIndex = 0;
 
   constructor(
     private db: FirestoreService,
@@ -119,60 +124,136 @@ export class ListadoSemanasComponent implements OnDestroy {
     private excelService: ExcelService,
     private alertService: AlertService
   ) {
+    const anioActual = new Date().getFullYear();
+    for (let anio = 2025; anio <= anioActual; anio++) {
+      this.anios.push(anio);
+    }
+
+    this.anioSeleccionado = anioActual;
     this.getPagos();
   }
 
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-  }
+  // ngOnDestroy(): void {
+  //   this.subscriptions.unsubscribe();
+  // }
 
-  getPagos() {
-    const query = this.db.getCollOrderBy('pagos', 'fechaRegistro', 'desc');
-    this.subscriptions.add(
-      query.subscribe({
-        next: async (pagos: any) => {
-          for (let i = 0; i < pagos.length; i++) {
-            pagos[i].trabajoAnterior ||= null;
-            pagos[i].trabajoReferencia ||= null;
-            pagos[i].partida ||= 'Partida 1';
-          }
-          this.pagosTodos = pagos;
-          const semanas = this.pagosTodos.map((res: Pago) => res.semana);
-          const semanasUnicasOrdenadas = [...new Set(semanas)].sort((a, b) => {
-            const numA = parseInt(a.replace(/\D/g, ''));
-            const numB = parseInt(b.replace(/\D/g, ''));
-            return numB - numA;
-          });
-          this.semanas = semanasUnicasOrdenadas;
-          const ultimaSemana = semanasUnicasOrdenadas[0];
-          this.semanaSelect = ultimaSemana;
-          this.pagos = this.pagosTodos.filter((res: Pago) => res.semana === ultimaSemana);
-          this.pagosFilter = this.pagos;
-          this.totalGeneral = this.pagos.reduce(
-            (sum: any, value: any) => sum + Number(value.totalPorCobrar),
-            0
-          );
-          this.totalPartida1 = this.pagos.reduce(
-            (sum: number, value: any) => {
-              return value.partida === 'Partida 1'
-                ? sum + Number(value.totalPorCobrar)
-                : sum;
-            },
-            0
-          );
-          this.totalPartida2 = this.pagos.reduce(
-            (sum: number, value: any) => {
-              return value.partida === 'Partida 2'
-                ? sum + Number(value.totalPorCobrar)
-                : sum;
-            },
-            0
-          );
-          this.setPagination(this.pagos);
-        },
-        error: (err: any) => console.log(err),
-      })
+  async getPagos() {
+    // const data: any[] = [];
+    // const collRef1 = await this.db.asyncColl(
+    //   'pagos',
+    // );
+    // collRef1.forEach((doc) => data.push(doc.data()));
+    // for (const d of data){
+    //   await this.db.updateDoc({ years: 2025 }, 'pagos', d.id);
+    // }
+    // console.log(data);
+    // return
+    const pagos: any[] = [];
+    const collRef = await this.db.asyncCollWhereOrderBy(
+      'pagos',
+      'years',
+      '==',
+      this.anioSeleccionado,
+      'fechaRegistro',
+      'desc'
     );
+    collRef.forEach((doc) => pagos.push(doc.data()));
+    this.alertService.alertClose();
+    for (let i = 0; i < pagos.length; i++) {
+      pagos[i].trabajoAnterior ||= null;
+      pagos[i].trabajoReferencia ||= null;
+      pagos[i].partida ||= 'Partida 1';
+    }
+    this.pagosTodos = pagos;
+    const semanas = this.pagosTodos.map((res: Pago) => res.semana);
+    const semanasUnicasOrdenadas = [...new Set(semanas)].sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ''));
+      const numB = parseInt(b.replace(/\D/g, ''));
+      return numB - numA;
+    });
+    this.semanas = semanasUnicasOrdenadas;
+    if (this.semanas.length > 0) {
+      const ultimaSemana = semanasUnicasOrdenadas[0];
+      this.selectedTabIndex = 0;
+      this.semanaSelect = ultimaSemana;
+      this.pagos = this.pagosTodos.filter(
+        (res: Pago) => res.semana === this.semanaSelect
+      );
+    } else {
+      this.selectedTabIndex = 0;
+      this.semanaSelect = '';
+      this.pagos = [];
+    }
+
+    this.pagosFilter = this.pagos;
+    this.totalGeneral = this.pagos.reduce(
+      (sum: any, value: any) => sum + Number(value.totalPorCobrar),
+      0
+    );
+    this.totalPartida1 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 1'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
+    this.totalPartida2 = this.pagos.reduce(
+      (sum: number, value: any) => {
+        return value.partida === 'Partida 2'
+          ? sum + Number(value.totalPorCobrar)
+          : sum;
+      },
+      0
+    );
+    this.setPagination(this.pagos);
+
+    // const query = this.db.getCollOrderBy('pagos', 'fechaRegistro', 'desc');
+    // this.subscriptions.add(
+    //   query.subscribe({
+    //     next: async (pagos: any) => {
+    //       for (let i = 0; i < pagos.length; i++) {
+    //         pagos[i].trabajoAnterior ||= null;
+    //         pagos[i].trabajoReferencia ||= null;
+    //         pagos[i].partida ||= 'Partida 1';
+    //       }
+    //       this.pagosTodos = pagos;
+    //       const semanas = this.pagosTodos.map((res: Pago) => res.semana);
+    //       const semanasUnicasOrdenadas = [...new Set(semanas)].sort((a, b) => {
+    //         const numA = parseInt(a.replace(/\D/g, ''));
+    //         const numB = parseInt(b.replace(/\D/g, ''));
+    //         return numB - numA;
+    //       });
+    //       this.semanas = semanasUnicasOrdenadas;
+    //       const ultimaSemana = semanasUnicasOrdenadas[0];
+    //       this.semanaSelect = ultimaSemana;
+    //       this.pagos = this.pagosTodos.filter((res: Pago) => res.semana === ultimaSemana);
+    //       this.pagosFilter = this.pagos;
+    //       this.totalGeneral = this.pagos.reduce(
+    //         (sum: any, value: any) => sum + Number(value.totalPorCobrar),
+    //         0
+    //       );
+    //       this.totalPartida1 = this.pagos.reduce(
+    //         (sum: number, value: any) => {
+    //           return value.partida === 'Partida 1'
+    //             ? sum + Number(value.totalPorCobrar)
+    //             : sum;
+    //         },
+    //         0
+    //       );
+    //       this.totalPartida2 = this.pagos.reduce(
+    //         (sum: number, value: any) => {
+    //           return value.partida === 'Partida 2'
+    //             ? sum + Number(value.totalPorCobrar)
+    //             : sum;
+    //         },
+    //         0
+    //       );
+    //       this.setPagination(this.pagos);
+    //     },
+    //     error: (err: any) => console.log(err),
+    //   })
+    // );
   }
 
   filterDatatable(event: any) {
@@ -285,6 +366,7 @@ export class ListadoSemanasComponent implements OnDestroy {
       if (row.idTrabajoAnterior !== '') {
         await this.db.updateDoc({ trabajoReferencia: null, idReferencia: '', pagado: '' }, 'pagos', row.idTrabajoAnterior);
       }
+      this.getPagos();
       this.alertService.toast(
         'Pago eliminado correctamente',
         'snackbar-success'
@@ -360,7 +442,7 @@ export class ListadoSemanasComponent implements OnDestroy {
     doc.setFont('helvetica');
     doc.setFontSize(18);
     doc.setTextColor(40, 40, 40);
-    doc.text(`Reporte de Trabajos ${this.semanaSelect}${select === '' || select === 'total' ? ' (General)' : " (" + select + ")"}`, 148.5, 15, { align: 'center' });
+    doc.text(`Reporte de Trabajos ${this.semanaSelect} - ${this.anioSeleccionado}${select === '' || select === 'total' ? ' (General)' : " (" + select + ")"}`, 148.5, 15, { align: 'center' });
 
     // Datos para la tabla
     const headers = [
@@ -431,7 +513,7 @@ export class ListadoSemanasComponent implements OnDestroy {
     );
 
     // Guardar PDF
-    doc.save(`reporte_trabajos_${this.semanaSelect}_${select === '' || select === 'total' ? 'General' : select}.pdf`);
+    doc.save(`reporte_trabajos_${this.semanaSelect}_${this.anioSeleccionado}_${select === '' || select === 'total' ? 'General' : select}.pdf`);
   }
 
   shareViaWhatsApp(select: string) {
@@ -467,6 +549,16 @@ export class ListadoSemanasComponent implements OnDestroy {
 
     // Abrir WhatsApp con el texto
     window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+  }
+
+  cargarPorAnio() {
+    this.semanas = [];
+    this.pagos = [];
+    this.pagosFilter = [];
+    this.semanaSelect = '';
+    this.selectedTabIndex = 0;
+    this.alertService.loanding('Cargando datos...')
+    this.getPagos();
   }
 
 }
