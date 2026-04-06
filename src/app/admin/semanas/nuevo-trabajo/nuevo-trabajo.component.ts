@@ -647,6 +647,9 @@ export class NuevoTrabajoComponent {
         id
       );
     }
+    console.log(this.materialesFilter);
+    console.log(datos.material.toLowerCase());  
+    
     if (
       !this.materialesFilter.some(
         (material: any) =>

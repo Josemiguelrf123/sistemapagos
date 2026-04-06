@@ -49,6 +49,18 @@ export const ROUTES: RouteInfo[] = [
         role: [''],
         submenu: [],
       },
+      {
+        path: '/admin/semanas/listado-datos',
+        title: 'Datos',
+        iconType: '',
+        icon: '',
+        class: 'ml-menu',
+        groupTitle: false,
+        badge: '',
+        badgeClass: '',
+        role: [''],
+        submenu: [],
+      },
       // {
       //   path: '/admin/semanas/reportes',
       //   title: 'Reporte',
