@@ -1,3 +1,4 @@
+import { FotosTrabajoComponent } from './../../../shared/components/fotos-trabajo/fotos-trabajo.component';
 import { Component, HostListener } from '@angular/core';
 import {
   UntypedFormBuilder,
@@ -52,6 +53,7 @@ import { GoogleDriveService } from '../../../core/service/google-drive.service';
     MatChipsModule,
     MatRadioModule,
     DatePipe,
+    FotosTrabajoComponent,
   ],
 })
 export class NuevoTrabajoComponent {
@@ -92,9 +94,12 @@ export class NuevoTrabajoComponent {
     'fechaEntrega',
     'precioTotal',
     'cobrado',
+    'imagenes',
   ];
   selectedItemOriginal: any = null;
   selectedItem: any = null;
+  imagenesExpandida = false;
+  imagenesSeleccionadaExpandida = false;
   anioActual!: number;
   fotoRevision: File[] = [];
   fotoEntrega: File[] = [];
@@ -136,6 +141,9 @@ export class NuevoTrabajoComponent {
   arrastrandoTouch = false;
   inicioTouchX = 0;
   inicioTouchY = 0;
+
+  modalImagenesAbierto = false;
+  trabajoImagenesSeleccionado: any = null;
 
   constructor(
     private fb: UntypedFormBuilder,
@@ -279,7 +287,12 @@ export class NuevoTrabajoComponent {
       item.trabajo = this.capitalizarPrimeraLetra(item.trabajo);
       item.material = this.capitalizarPrimeraLetra(item.material);
       item.tono = item.tono !== '' ? item.tono.toLocaleUpperCase() : item.tono;
+      item.fotografias ??= {
+        revision: [],
+        entrega: [],
+      };
     });
+
     this.originalData = dataPagos.filter(
       (res: any) => res.semana !== this.semanas[0],
     );
@@ -1030,6 +1043,7 @@ export class NuevoTrabajoComponent {
     const opt = await this.alertService.alertConfirm(mensaje);
     if (opt.isConfirmed) {
       this.selectedItem = item;
+      this.imagenesSeleccionadaExpandida = false;
       this.mostrarModal = false;
       this.pagosForm.patchValue({
         noContrato: this.selectedItem.noContrato || '',
@@ -1041,6 +1055,10 @@ export class NuevoTrabajoComponent {
         placaBase: this.selectedItem.placaBase || 'NO',
         precio: this.selectedItem.precio || 0,
         observaciones: this.selectedItem.observaciones || '',
+        fotografias: (this.selectedItem.fotografias ??= {
+          revision: [],
+          entrega: [],
+        }),
       });
       setTimeout(() => {
         document.querySelector('.selected-info')?.scrollIntoView({
@@ -1632,5 +1650,23 @@ export class NuevoTrabajoComponent {
         'snackbar-error',
       );
     }
+  }
+
+  abrirModalImagenes(trabajo: any): void {
+    this.trabajoImagenesSeleccionado = trabajo;
+    this.modalImagenesAbierto = true;
+  }
+
+  cerrarModalImagenes(): void {
+    this.modalImagenesAbierto = false;
+    this.trabajoImagenesSeleccionado = null;
+  }
+
+  toggleImagenes(): void {
+    this.imagenesExpandida = !this.imagenesExpandida;
+  }
+
+  toggleImagenesSeleccionada(): void {
+    this.imagenesSeleccionadaExpandida = !this.imagenesSeleccionadaExpandida;
   }
 }

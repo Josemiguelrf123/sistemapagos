@@ -205,6 +205,20 @@
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>Observaciones</th>
                   <td mat-cell *matCellDef="let row">{{row.observaciones}}</td>
                 </ng-container>
+                <ng-container matColumnDef="imagenes">
+                  <th mat-header-cell *matHeaderCellDef>Imágenes</th>
+                  <td mat-cell *matCellDef="let row">
+                    @if (tieneFotografias(row.fotografias)) {
+                    <button
+                      type="button"
+                      class="btn-ver-imagenes-listado"
+                      (click)="abrirModalImagenes(row)">
+                      <mat-icon>photo_library</mat-icon>
+                      Ver imágenes
+                    </button>
+                    }
+                  </td>
+                </ng-container>
                 <!-- actions -->
                 <ng-container matColumnDef="actions">
                   <th mat-header-cell *matHeaderCellDef class="sticky-col right-col">Acciones</th>
@@ -347,6 +361,15 @@
                     }
                   </div>
                 </mat-card-content>
+                @if (tieneFotografias(pago.fotografias)) {
+                <div class="card-fotos-responsive">
+                  <app-fotos-trabajo
+                    [fotografias]="pago.fotografias"
+                    modo="seleccionado"
+                    (verFoto)="abrirFotoViewer($event.fotos, $event.indice)">
+                  </app-fotos-trabajo>
+                </div>
+                }
                 <mat-card-actions class="d-flex gap-2" style="align-self: center;">
                   <button mat-icon-button color="primary" matTooltip="Editar" (click)="iraEditar(pago.id)">
                     <mat-icon>edit</mat-icon>
@@ -358,12 +381,12 @@
               </mat-card>
             </div>
             }
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+                   </div>
+                 </div>
+
+               </div>
+             </div>
+           </div>
 
 @if (mostrarModal){
 <div class="custom-modal-backdrop">
@@ -375,7 +398,7 @@
     <div class="modal-body">
       <div class="container" style="max-width: 100%!important;">
         <!-- Vista para pantallas grandes (tabla) -->
-        <div class="d-none d-md-block">
+        <div class="modal-desktop-view">
           <div class="body">
             <div class="selected-info">
               <div class="selected-card mat-elevation-z4">
@@ -457,6 +480,15 @@
                         <p><strong>Pagado:</strong> {{selectedItem.pagado}}</p>
                       </div>
                     </div>
+                    @if (tieneFotografias(selectedItem.fotografias)) {
+                    <div class="modal-fotos modal-fotos-web photos-panel selected-photos-panel">
+                      <app-fotos-trabajo
+                        [fotografias]="selectedItem.fotografias"
+                        modo="seleccionado"
+                        (verFoto)="abrirFotoViewer($event.fotos, $event.indice)">
+                      </app-fotos-trabajo>
+                    </div>
+                    }
                     <hr>
                     <div class="row">
                       <div class="selected-header">
@@ -496,6 +528,15 @@
                         <p><strong>Pagado:</strong> {{selectedItem1.pagado}}</p>
                       </div>
                     </div>
+                    @if (tieneFotografias(selectedItem1.fotografias)) {
+                    <div class="modal-fotos modal-fotos-web photos-panel selected-photos-panel">
+                      <app-fotos-trabajo
+                        [fotografias]="selectedItem1.fotografias"
+                        modo="seleccionado"
+                        (verFoto)="abrirFotoViewer($event.fotos, $event.indice)">
+                      </app-fotos-trabajo>
+                    </div>
+                    }
                   </div>
                 </div>
               </div>
@@ -504,7 +545,7 @@
         </div>
 
         <!-- Vista para móviles (cards) -->
-        <div class="d-md-none">
+        <div class="modal-responsive-view">
           <div class="row">
             <mat-card class="shadow-sm rounded card-normal">
               <mat-card-header>
@@ -545,9 +586,18 @@
                 @if (selectedItem.observaciones !== '') {
                 <p class="mt-2"><strong>Observaciones:</strong> {{ selectedItem.observaciones }}</p>
                 }
-                <p><strong>Pagado:</strong> {{ selectedItem.pagado }}</p>
-              </mat-card-content>
-            </mat-card>
+                 <p><strong>Pagado:</strong> {{ selectedItem.pagado }}</p>
+               </mat-card-content>
+               @if (tieneFotografias(selectedItem.fotografias)) {
+                <div class="modal-fotos modal-fotos-movil photos-panel selected-photos-panel">
+                 <app-fotos-trabajo
+                   [fotografias]="selectedItem.fotografias"
+                         modo="seleccionado"
+                        (verFoto)="abrirFotoViewer($event.fotos, $event.indice)">
+                 </app-fotos-trabajo>
+               </div>
+               }
+             </mat-card>
             <mat-card class="shadow-sm rounded card-normal mt-3">
               <mat-card-header>
                 <mat-card-title class="text-primary fw-bold">
@@ -589,14 +639,86 @@
                 @if (selectedItem1.observaciones !== '') {
                 <p class="mt-2"><strong>Observaciones:</strong> {{ selectedItem1.observaciones }}</p>
                 }
-                <p><strong>Pagado:</strong> {{ selectedItem1.pagado }}</p>
-              </mat-card-content>
-            </mat-card>
+                 <p><strong>Pagado:</strong> {{ selectedItem1.pagado }}</p>
+               </mat-card-content>
+               @if (tieneFotografias(selectedItem1.fotografias)) {
+                <div class="modal-fotos modal-fotos-movil photos-panel selected-photos-panel">
+                 <app-fotos-trabajo
+                   [fotografias]="selectedItem1.fotografias"
+                         modo="seleccionado"
+                        (verFoto)="abrirFotoViewer($event.fotos, $event.indice)">
+                 </app-fotos-trabajo>
+               </div>
+               }
+             </mat-card>
           </div>
         </div>
 
       </div>
     </div>
+  </div>
+</div>
+}
+
+@if (modalImagenesAbierto && trabajoImagenesSeleccionado) {
+<div class="imagenes-modal-backdrop" (click)="cerrarModalImagenes()">
+  <section class="imagenes-modal-panel photos-panel selected-photos-panel" (click)="$event.stopPropagation()">
+    <button
+      type="button"
+      class="imagenes-modal-close"
+      (click)="cerrarModalImagenes()"
+      aria-label="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+
+    <app-fotos-trabajo
+      [fotografias]="trabajoImagenesSeleccionado.fotografias"
+      modo="seleccionado"
+      (verFoto)="abrirFotoViewer($event.fotos, $event.indice)">
+    </app-fotos-trabajo>
+  </section>
+</div>
+}
+
+@if (fotoViewerAbierto) {
+<div class="photo-viewer" (click)="cerrarFotoViewer()">
+  <button type="button" class="photo-viewer-close" (click)="cerrarFotoViewer(); $event.stopPropagation()" aria-label="Cerrar">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <div class="photo-viewer-content" (click)="$event.stopPropagation()">
+    <button type="button" class="photo-viewer-nav photo-viewer-prev" (click)="fotoAnterior()" [disabled]="fotosViewer.length <= 1" aria-label="Fotografía anterior">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <div
+      class="photo-viewer-image-container"
+      (wheel)="zoomConRueda($event)"
+      (mousedown)="iniciarArrastre($event)"
+      (mousemove)="moverFoto($event)"
+      (mouseup)="terminarArrastre()"
+      (mouseleave)="terminarArrastre()"
+      (touchstart)="iniciarPinch($event); iniciarArrastreTouch($event)"
+      (touchmove)="moverPinch($event); moverArrastreTouch($event)"
+      (touchend)="terminarPinch(); terminarArrastreTouch()"
+      (touchcancel)="terminarPinch(); terminarArrastreTouch()">
+      <img
+        class="photo-viewer-image"
+        [src]="getFotoViewerUrl()"
+        [alt]="fotosViewer[indiceFotoViewer]?.fileName || 'Fotografía'"
+        [style.transform]="'translate(' + posicionXFotoViewer + 'px, ' + posicionYFotoViewer + 'px) scale(' + zoomFotoViewer + ')'"
+        [class.arrastrando]="arrastrandoFotoViewer"
+        (load)="imagenViewerCargada()"
+        referrerpolicy="no-referrer" />
+    </div>
+
+    <button type="button" class="photo-viewer-nav photo-viewer-next" (click)="fotoSiguiente()" [disabled]="fotosViewer.length <= 1" aria-label="Fotografía siguiente">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <div class="photo-viewer-counter">
+    {{ indiceFotoViewer + 1 }} / {{ fotosViewer.length }}
   </div>
 </div>
 }

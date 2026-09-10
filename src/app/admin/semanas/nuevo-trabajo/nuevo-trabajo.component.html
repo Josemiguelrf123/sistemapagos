@@ -89,6 +89,256 @@
                       </div>
                     </div>
                   </div>
+
+                  <!-- ============================================================
+     FOTOGRAFÍAS DEL TRABAJO SELECCIONADO
+============================================================= -->
+
+                  @if (
+                  selectedItem?.fotografias?.revision?.length ||
+                  selectedItem?.fotografias?.entrega?.length
+                  ) {
+                  <div class="selected-photos-responsive">
+                    <div class="selected-responsive-toggle">
+                      <button
+                        type="button"
+                        class="btn-fotos-responsive"
+                        (click)="toggleImagenesSeleccionada()"
+                        [attr.aria-expanded]="imagenesSeleccionadaExpandida"
+                        aria-controls="fotos-trabajo-seleccionado">
+                        <span class="btn-fotos-responsive-left">
+                          <mat-icon>photo_library</mat-icon>
+                          {{ imagenesSeleccionadaExpandida ? 'Ocultar imágenes' : 'Ver imágenes' }}
+                        </span>
+
+                        <span class="btn-fotos-responsive-count">
+                          {{
+                          (selectedItem?.fotografias?.revision?.length || 0) +
+                          (selectedItem?.fotografias?.entrega?.length || 0)
+                          }}
+                        </span>
+                      </button>
+                    </div>
+
+                    <section
+                      id="fotos-trabajo-seleccionado"
+                      class="photos-panel selected-photos-panel"
+                      [class.selected-photos-panel-collapsed]="!imagenesSeleccionadaExpandida">
+
+                    <!-- ENCABEZADO -->
+
+                    <div class="photos-panel-header">
+
+                      <div class="photos-heading">
+
+                        <div class="photos-heading-icon">
+                          <mat-icon>photo_library</mat-icon>
+                        </div>
+
+                        <div>
+                          <h3>Fotografías del trabajo</h3>
+
+                          <p>
+                            Evidencia de la revisión y entrega.
+                          </p>
+                        </div>
+
+                      </div>
+
+                      <div class="photos-total">
+
+                        {{
+                        (selectedItem?.fotografias?.revision?.length || 0) +
+                        (selectedItem?.fotografias?.entrega?.length || 0)
+                        }}
+
+                        / 20
+
+                      </div>
+
+                    </div>
+
+                    <!-- GRUPOS -->
+
+                    <div class="photo-groups">
+
+
+                      <!-- ========================================================
+         REVISIÓN
+    ========================================================= -->
+
+                      <div class="photo-group">
+
+                        <div class="photo-group-header">
+
+                          <div class="photo-group-title">
+
+                            <div class="photo-group-icon revision">
+                              <mat-icon>fact_check</mat-icon>
+                            </div>
+
+                            <div>
+                              <h4>Revisión</h4>
+
+                              <span>
+                                Evidencia de la revisión del trabajo
+                              </span>
+                            </div>
+
+                          </div>
+
+                          <div class="photo-counter">
+
+                            {{ selectedItem?.fotografias?.revision?.length || 0 }}
+
+                            / 10
+
+                          </div>
+
+                        </div>
+
+
+                        @if (selectedItem?.fotografias?.revision?.length) {
+
+                        <div class="photo-gallery">
+
+                          @for (
+                          foto of selectedItem.fotografias.revision;
+                          track foto.fileId;
+                          let i = $index
+                          ) {
+
+                          <div class="photo-item" (click)="
+                abrirFotoViewer(
+                  selectedItem.fotografias.revision,
+                  i
+                )
+              ">
+
+                            <img [src]="getFotoViewUrl(foto)" [alt]="
+                  foto.fileName ||
+                  'Fotografía de revisión'
+                " referrerpolicy="no-referrer" />
+
+                            <div class="photo-number">
+                              {{ i + 1 }}
+                            </div>
+
+                          </div>
+
+                          }
+
+                        </div>
+
+                        } @else {
+
+                        <div class="photo-empty-message">
+
+                          <mat-icon>
+                            photo_camera
+                          </mat-icon>
+
+                          <span>
+                            Todavía no hay fotografías de revisión.
+                          </span>
+
+                        </div>
+
+                        }
+
+                      </div>
+
+
+                      <!-- ========================================================
+         ENTREGA
+    ========================================================= -->
+
+                      <div class="photo-group">
+
+                        <div class="photo-group-header">
+
+                          <div class="photo-group-title">
+
+                            <div class="photo-group-icon entrega">
+                              <mat-icon>inventory_2</mat-icon>
+                            </div>
+
+                            <div>
+                              <h4>Entrega</h4>
+
+                              <span>
+                                Evidencia de cómo quedó el trabajo
+                              </span>
+                            </div>
+
+                          </div>
+
+                          <div class="photo-counter">
+
+                            {{ selectedItem?.fotografias?.entrega?.length || 0 }}
+
+                            / 10
+
+                          </div>
+
+                        </div>
+
+
+                        @if (selectedItem?.fotografias?.entrega?.length) {
+
+                        <div class="photo-gallery">
+
+                          @for (
+                          foto of selectedItem.fotografias.entrega;
+                          track foto.fileId;
+                          let i = $index
+                          ) {
+
+                          <div class="photo-item" (click)="
+                abrirFotoViewer(
+                  selectedItem.fotografias.entrega,
+                  i
+                )
+              ">
+
+                            <img [src]="getFotoViewUrl(foto)" [alt]="
+                  foto.fileName ||
+                  'Fotografía de entrega'
+                " referrerpolicy="no-referrer" />
+
+                            <div class="photo-number">
+                              {{ i + 1 }}
+                            </div>
+
+                          </div>
+
+                          }
+
+                        </div>
+
+                        } @else {
+
+                        <div class="photo-empty-message">
+
+                          <mat-icon>
+                            photo_camera
+                          </mat-icon>
+
+                          <span>
+                            Todavía no hay fotografías de entrega.
+                          </span>
+
+                        </div>
+
+                        }
+
+                      </div>
+
+                    </div>
+
+                    </section>
+                  </div>
+                  }
                 </div>
               </div>
             </div>
@@ -710,6 +960,27 @@
               </td>
             </ng-container>
 
+            <!-- Imágenes -->
+            <ng-container matColumnDef="imagenes">
+              <th mat-header-cell *matHeaderCellDef>
+                Imágenes
+              </th>
+
+              <td mat-cell *matCellDef="let element">
+
+                @if (
+                element.fotografias?.revision?.length ||
+                element.fotografias?.entrega?.length
+                ) {
+                <button type="button" class="btn-ver-imagenes" (click)="abrirModalImagenes(element)">
+                  <mat-icon>photo_library</mat-icon>
+                  Ver imágenes
+                </button>
+                }
+
+              </td>
+            </ng-container>
+
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"
               [class.row-selected]="selectedItem?.id === row.id"></tr>
@@ -768,6 +1039,187 @@
                     <div class="col-sm-12">
                       <p class="mt-2"><strong>Observaciones:</strong> {{ item.observaciones }}</p>
                     </div>
+                    }
+                    <!-- ============================================================
+     FOTOGRAFÍAS - SOLO TARJETA RESPONSIVE
+============================================================= -->
+
+                    @if (
+                    item.fotografias?.revision?.length ||
+                    item.fotografias?.entrega?.length
+                    ) {
+
+                    <div class="fotos-responsive-card">
+
+                      <!-- BOTÓN VER / OCULTAR -->
+
+                      <button type="button" class="btn-fotos-responsive" (click)="toggleImagenes()">
+
+                        <span class="btn-fotos-responsive-left">
+
+                          <mat-icon>
+                            photo_library
+                          </mat-icon>
+
+                          {{
+                          imagenesExpandida
+                          ? 'Ocultar imágenes'
+                          : 'Ver imágenes'
+                          }}
+
+                        </span>
+
+
+                        <span class="btn-fotos-responsive-count">
+
+                          {{
+                          (item.fotografias?.revision?.length || 0) +
+                          (item.fotografias?.entrega?.length || 0)
+                          }}
+
+                        </span>
+
+                      </button>
+
+
+                      <!-- ========================================================
+         FOTOS DESPLEGADAS
+    ========================================================= -->
+
+                      @if (imagenesExpandida) {
+
+                      <div class="fotos-responsive-contenido">
+
+
+                        <!-- ================= REVISIÓN ================= -->
+
+                        @if (item.fotografias?.revision?.length) {
+
+                        <div class="fotos-responsive-grupo">
+
+                          <div class="fotos-responsive-grupo-header">
+
+                            <div class="fotos-responsive-grupo-titulo">
+
+                              <mat-icon>
+                                fact_check
+                              </mat-icon>
+
+                              <span>
+                                Revisión
+                              </span>
+
+                            </div>
+
+                            <span class="fotos-responsive-contador">
+                              {{ item.fotografias.revision.length }} / 10
+                            </span>
+
+                          </div>
+
+
+                          <div class="fotos-responsive-galeria">
+
+                            @for (
+                            foto of item.fotografias.revision;
+                            track foto.fileId;
+                            let i = $index
+                            ) {
+
+                            <div class="fotos-responsive-item" (click)="
+                    abrirFotoViewer(
+                      item.fotografias.revision,
+                      i
+                    )
+                  ">
+
+                              <img [src]="getFotoViewUrl(foto)" [alt]="
+                      foto.fileName ||
+                      'Fotografía de revisión'
+                    " referrerpolicy="no-referrer" />
+
+                              <span class="fotos-responsive-numero">
+                                {{ i + 1 }}
+                              </span>
+
+                            </div>
+
+                            }
+
+                          </div>
+
+                        </div>
+
+                        }
+
+
+                        <!-- ================= ENTREGA ================= -->
+
+                        @if (item.fotografias?.entrega?.length) {
+
+                        <div class="fotos-responsive-grupo">
+
+                          <div class="fotos-responsive-grupo-header">
+
+                            <div class="fotos-responsive-grupo-titulo">
+
+                              <mat-icon>
+                                inventory_2
+                              </mat-icon>
+
+                              <span>
+                                Entrega
+                              </span>
+
+                            </div>
+
+                            <span class="fotos-responsive-contador">
+                              {{ item.fotografias.entrega.length }} / 10
+                            </span>
+
+                          </div>
+
+
+                          <div class="fotos-responsive-galeria">
+
+                            @for (
+                            foto of item.fotografias.entrega;
+                            track foto.fileId;
+                            let i = $index
+                            ) {
+
+                            <div class="fotos-responsive-item" (click)="
+                    abrirFotoViewer(
+                      item.fotografias.entrega,
+                      i
+                    )
+                  ">
+
+                              <img [src]="getFotoViewUrl(foto)" [alt]="
+                      foto.fileName ||
+                      'Fotografía de entrega'
+                    " referrerpolicy="no-referrer" />
+
+                              <span class="fotos-responsive-numero">
+                                {{ i + 1 }}
+                              </span>
+
+                            </div>
+
+                            }
+
+                          </div>
+
+                        </div>
+
+                        }
+
+                      </div>
+
+                      }
+
+                    </div>
+
                     }
                   </div>
                 </mat-card-content>
@@ -844,4 +1296,276 @@
   </div>
 
 </div>
+}
+@if (modalImagenesAbierto) {
+
+<div class="imagenes-modal-backdrop" (click)="cerrarModalImagenes()">
+
+  <section class="photos-panel imagenes-modal-panel" (click)="$event.stopPropagation()">
+
+    <!-- =====================================================
+           CERRAR
+      ====================================================== -->
+
+    <button type="button" class="imagenes-modal-close" (click)="cerrarModalImagenes()" aria-label="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+
+
+    <!-- =====================================================
+           ENCABEZADO
+      ====================================================== -->
+
+    <div class="photos-panel-header">
+
+      <div class="photos-heading">
+
+        <div class="photos-heading-icon">
+          <mat-icon>photo_library</mat-icon>
+        </div>
+
+        <div>
+
+          <h3>
+            Fotografías del trabajo
+          </h3>
+
+          <p>
+            Evidencia de la revisión y entrega.
+          </p>
+
+        </div>
+
+      </div>
+
+
+    </div>
+
+
+    <!-- =====================================================
+           GRUPOS
+      ====================================================== -->
+
+    <div class="photo-groups">
+
+
+      <!-- ===================================================
+             REVISIÓN
+        ==================================================== -->
+
+      <div class="photo-group">
+
+        <div class="photo-group-header">
+
+          <div class="photo-group-title">
+
+            <div class="photo-group-icon revision">
+
+              <mat-icon>
+                fact_check
+              </mat-icon>
+
+            </div>
+
+            <div>
+
+              <h4>
+                Revisión
+              </h4>
+
+              <span>
+                Evidencia de la revisión del trabajo
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="photo-counter">
+
+            {{
+            trabajoImagenesSeleccionado
+            ?.fotografias
+            ?.revision
+            ?.length || 0
+            }}
+
+            / 10
+
+          </div>
+
+        </div>
+
+
+        <!-- FOTOGRAFÍAS -->
+
+        @if (
+        trabajoImagenesSeleccionado
+        ?.fotografias
+        ?.revision
+        ?.length
+        ) {
+
+        <div class="photo-gallery">
+
+          @for (
+          foto of trabajoImagenesSeleccionado.fotografias.revision;
+          track foto.fileId;
+          let i = $index
+          ) {
+
+          <div class="photo-item" (click)="
+                    abrirFotoViewer(
+                      trabajoImagenesSeleccionado.fotografias.revision,
+                      i
+                    )
+                  ">
+
+            <img [src]="getFotoViewUrl(foto)" [alt]="
+                      foto.fileName ||
+                      'Fotografía de revisión'
+                    " referrerpolicy="no-referrer" />
+
+            <div class="photo-number">
+              {{ i + 1 }}
+            </div>
+
+          </div>
+
+          }
+
+        </div>
+
+        } @else {
+
+        <div class="photo-empty-message">
+
+          <mat-icon>
+            photo_camera
+          </mat-icon>
+
+          <span>
+            Todavía no hay fotografías de revisión.
+          </span>
+
+        </div>
+
+        }
+
+      </div>
+
+
+      <!-- ===================================================
+             ENTREGA
+        ==================================================== -->
+
+      <div class="photo-group">
+
+        <div class="photo-group-header">
+
+          <div class="photo-group-title">
+
+            <div class="photo-group-icon entrega">
+
+              <mat-icon>
+                inventory_2
+              </mat-icon>
+
+            </div>
+
+            <div>
+
+              <h4>
+                Entrega
+              </h4>
+
+              <span>
+                Evidencia de cómo quedó el trabajo
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="photo-counter">
+
+            {{
+            trabajoImagenesSeleccionado
+            ?.fotografias
+            ?.entrega
+            ?.length || 0
+            }}
+
+            / 10
+
+          </div>
+
+        </div>
+
+
+        <!-- FOTOGRAFÍAS -->
+
+        @if (
+        trabajoImagenesSeleccionado
+        ?.fotografias
+        ?.entrega
+        ?.length
+        ) {
+
+        <div class="photo-gallery">
+
+          @for (
+          foto of trabajoImagenesSeleccionado.fotografias.entrega;
+          track foto.fileId;
+          let i = $index
+          ) {
+
+          <div class="photo-item" (click)="
+                    abrirFotoViewer(
+                      trabajoImagenesSeleccionado.fotografias.entrega,
+                      i
+                    )
+                  ">
+
+            <img [src]="getFotoViewUrl(foto)" [alt]="
+                      foto.fileName ||
+                      'Fotografía de entrega'
+                    " referrerpolicy="no-referrer" />
+
+            <div class="photo-number">
+              {{ i + 1 }}
+            </div>
+
+          </div>
+
+          }
+
+        </div>
+
+        } @else {
+
+        <div class="photo-empty-message">
+
+          <mat-icon>
+            photo_camera
+          </mat-icon>
+
+          <span>
+            Todavía no hay fotografías de entrega.
+          </span>
+
+        </div>
+
+        }
+
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
 }
