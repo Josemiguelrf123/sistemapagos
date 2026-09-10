@@ -8,6 +8,7 @@
       <button mat-raised-button color="secondary" class="btn-trabajo" (click)="mostrarModal = true">
         Trabajo anterior
       </button>
+
     </div>
     <div class="row clearfix">
       <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
@@ -263,7 +264,315 @@
                   </mat-form-field>
                 </div>
               </div>
-              @if (!edit){
+
+              <!-- ============================================================
+     FOTOGRAFÍAS DEL TRABAJO
+============================================================= -->
+
+              <div class="row">
+                <div class="col-12 mb-3">
+
+                  <section class="photos-panel">
+
+                    <!-- ENCABEZADO -->
+                    <div class="photos-panel-header">
+
+                      <div class="photos-heading">
+
+                        <div class="photos-heading-icon">
+                          <mat-icon>photo_library</mat-icon>
+                        </div>
+
+                        <div>
+                          <h3>Fotografías del trabajo</h3>
+                          <p>
+                            Agrega evidencia de la revisión y entrega.
+                          </p>
+                        </div>
+
+                      </div>
+
+                      <div class="photos-total">
+                        {{
+                        fotoRevision.length + fotoEntrega.length
+                        }}
+                        / 20
+                      </div>
+
+                    </div>
+
+
+                    <!-- ==========================================================
+           GRUPOS DE FOTOS
+      =========================================================== -->
+
+                    <div class="photo-groups">
+
+
+                      <!-- ========================================================
+             REVISIÓN
+        ========================================================= -->
+
+                      <div class="photo-group">
+
+                        @if (fotosGuardadasRevision.length > 0) {
+                        <div class="saved-photos-grid">
+                          @for (foto of fotosGuardadasRevision; track $index) {
+
+                          <div class="saved-photo">
+
+                            <button type="button" class="saved-photo-delete" (click)="
+            eliminarFotoGuardada(
+              foto,
+              'revision',
+              $index
+            );
+            $event.stopPropagation()
+          " aria-label="Eliminar fotografía">
+                              <mat-icon>delete</mat-icon>
+                            </button>
+
+                            <img [src]="getFotoViewUrl(foto)" [alt]="foto.fileName || 'Fotografía de revisión'"
+                              referrerpolicy="no-referrer" (click)="
+            abrirFotoViewer(
+              fotosGuardadasRevision,
+              $index
+            )
+          " />
+
+                          </div>
+                          }
+                        </div>
+                        }
+
+                        <div class="photo-group-header">
+
+                          <div class="photo-group-title">
+
+                            <div class="photo-group-icon revision">
+                              <mat-icon>fact_check</mat-icon>
+                            </div>
+
+                            <div>
+                              <h4>Revisión</h4>
+                              <span>
+                                Evidencia de la revisión del trabajo
+                              </span>
+                            </div>
+
+                          </div>
+
+                          <div class="photo-counter">
+                            {{ fotoRevision.length }} / {{ MAX_FOTOS }}
+                          </div>
+
+                        </div>
+
+
+                        <!-- GALERÍA -->
+                        <div class="photo-gallery">
+
+                          @for (
+                          preview of previewRevision;
+                          track $index
+                          ) {
+
+                          <div class="photo-item">
+
+                            <img [src]="preview" [alt]="'Foto de revisión ' + ($index + 1)">
+
+                            <div class="photo-number">
+                              {{ $index + 1 }}
+                            </div>
+
+                            <button type="button" class="photo-delete" aria-label="Eliminar foto"
+                              (click)="quitarFotoRevision($index)">
+                              <mat-icon>close</mat-icon>
+                            </button>
+
+                          </div>
+
+                          }
+
+
+                          <!-- BOTÓN AGREGAR -->
+                          @if (fotoRevision.length < MAX_FOTOS) { <label class="photo-add" for="fotoRevisionInput">
+
+                            <input id="fotoRevisionInput" type="file" accept="image/jpeg,image/png,image/webp" multiple
+                              capture="environment" (change)="seleccionarFotoRevision($event)" hidden>
+
+                            <div class="photo-add-icon">
+                              <mat-icon>add</mat-icon>
+                            </div>
+
+                            <strong>
+                              Agregar fotos
+                            </strong>
+
+                            <span>
+                              Puedes seleccionar varias
+                            </span>
+
+                            </label>
+
+                            }
+
+                        </div>
+
+
+                        @if (fotoRevision.length === 0) {
+
+                        <div class="photo-empty-message">
+                          <mat-icon>photo_camera</mat-icon>
+
+                          <span>
+                            Todavía no has agregado fotografías de revisión.
+                          </span>
+                        </div>
+
+                        }
+
+                      </div>
+
+
+
+                      <!-- ========================================================
+             ENTREGA
+        ========================================================= -->
+
+                      <div class="photo-group">
+
+                        @if (fotosGuardadasEntrega.length > 0) {
+                        <div class="saved-photos-grid">
+                          @for (foto of fotosGuardadasEntrega; track $index) {
+
+                          <div class="saved-photo">
+
+                            <button type="button" class="saved-photo-delete" (click)="
+            eliminarFotoGuardada(
+              foto,
+              'entrega',
+              $index
+            );
+            $event.stopPropagation()
+          " aria-label="Eliminar fotografía">
+                              <mat-icon>delete</mat-icon>
+                            </button>
+
+                            <img [src]="getFotoViewUrl(foto)" [alt]="foto.fileName || 'Fotografía de entrega'"
+                              referrerpolicy="no-referrer" (click)="
+            abrirFotoViewer(
+              fotosGuardadasEntrega,
+              $index
+            )
+          " />
+
+                          </div>
+                          }
+                        </div>
+                        }
+
+                        <div class="photo-group-header">
+
+                          <div class="photo-group-title">
+
+                            <div class="photo-group-icon entrega">
+                              <mat-icon>inventory_2</mat-icon>
+                            </div>
+
+                            <div>
+                              <h4>Entrega</h4>
+                              <span>
+                                Evidencia de cómo quedó el trabajo
+                              </span>
+                            </div>
+
+                          </div>
+
+                          <div class="photo-counter">
+                            {{ fotoEntrega.length }} / {{ MAX_FOTOS }}
+                          </div>
+
+                        </div>
+
+
+                        <!-- GALERÍA -->
+                        <div class="photo-gallery">
+
+                          @for (
+                          preview of previewEntrega;
+                          track $index
+                          ) {
+
+                          <div class="photo-item">
+
+                            <img [src]="preview" [alt]="'Foto de entrega ' + ($index + 1)">
+
+                            <div class="photo-number">
+                              {{ $index + 1 }}
+                            </div>
+
+                            <button type="button" class="photo-delete" aria-label="Eliminar foto"
+                              (click)="quitarFotoEntrega($index)">
+                              <mat-icon>close</mat-icon>
+                            </button>
+
+                          </div>
+
+                          }
+
+
+                          <!-- BOTÓN AGREGAR -->
+                          @if (fotoEntrega.length < MAX_FOTOS) { <label class="photo-add" for="fotoEntregaInput">
+
+                            <input id="fotoEntregaInput" type="file" accept="image/jpeg,image/png,image/webp" multiple
+                              capture="environment" (change)="seleccionarFotoEntrega($event)" hidden>
+
+                            <div class="photo-add-icon">
+                              <mat-icon>add</mat-icon>
+                            </div>
+
+                            <strong>
+                              Agregar fotos
+                            </strong>
+
+                            <span>
+                              Puedes seleccionar varias
+                            </span>
+
+                            </label>
+
+                            }
+
+                        </div>
+
+
+                        @if (fotoEntrega.length === 0) {
+
+                        <div class="photo-empty-message">
+                          <mat-icon>photo_camera</mat-icon>
+
+                          <span>
+                            Todavía no has agregado fotografías de entrega.
+                          </span>
+                        </div>
+
+                        }
+
+                      </div>
+
+                    </div>
+
+                  </section>
+
+                </div>
+              </div>
+
+              <!-- ============================================================
+                   BOTÓN DE GUARDAR O MODIFICAR
+              ============================================================= -->
+
+              @if (!edit) {
               <div class="row">
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-2 text-center">
                   <div class="example-button-row">
@@ -273,6 +582,7 @@
                 </div>
               </div>
               }
+
               @if (edit){
               <div class="row">
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-2 text-center">
@@ -487,5 +797,51 @@
       </div>
     </div>
   </div>
+</div>
+}
+@if (fotoViewerAbierto) {
+<div class="photo-viewer" (click)="cerrarFotoViewer()">
+  <button type="button" class="photo-viewer-close" (click)="cerrarFotoViewer(); $event.stopPropagation()"
+    aria-label="Cerrar">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <div class="photo-viewer-content" (click)="$event.stopPropagation()">
+
+    <button type="button" class="photo-viewer-nav photo-viewer-prev" (click)="fotoAnterior()"
+      [disabled]="fotosViewer.length <= 1" aria-label="Fotografía anterior">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <div class="photo-viewer-image-container" (wheel)="zoomConRueda($event)" (mousedown)="iniciarArrastre($event)"
+      (mousemove)="moverFoto($event)" (mouseup)="terminarArrastre()" (mouseleave)="terminarArrastre()"
+      (touchstart)="iniciarPinch($event); iniciarArrastreTouch($event)"
+      (touchmove)="moverPinch($event); moverArrastreTouch($event)" (touchend)="terminarPinch(); terminarArrastreTouch()"
+      (touchcancel)="terminarPinch(); terminarArrastreTouch()">
+      <img class="photo-viewer-image" [src]="getFotoViewerUrl()" [alt]="
+            fotosViewer[indiceFotoViewer]?.fileName ||
+            'Fotografía'
+          " [style.transform]="
+      'translate(' +
+      posicionXFotoViewer +
+      'px, ' +
+      posicionYFotoViewer +
+      'px) scale(' +
+      zoomFotoViewer +
+      ')'
+    " [class.arrastrando]="arrastrandoFotoViewer" (load)="imagenViewerCargada()">
+    </div>
+
+    <button type="button" class="photo-viewer-nav photo-viewer-next" (click)="fotoSiguiente()"
+      [disabled]="fotosViewer.length <= 1" aria-label="Fotografía siguiente">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+
+  </div>
+
+  <div class="photo-viewer-counter">
+    {{ indiceFotoViewer + 1 }} / {{ fotosViewer.length }}
+  </div>
+
 </div>
 }

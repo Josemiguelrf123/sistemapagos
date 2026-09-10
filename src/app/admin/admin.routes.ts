@@ -1,11 +1,14 @@
 import { Route } from '@angular/router';
+
 import {
   canActivate,
-  redirectUnauthorizedTo,
+  redirectUnauthorizedTo
 } from '@angular/fire/auth-guard';
+
 const redirectUnauthorizedToLogin = () => redirectUnauthorizedTo(['']);
 
 export const ADMIN_ROUTE: Route[] = [
+
   {
     path: 'semanas',
     loadChildren: () =>
@@ -13,5 +16,15 @@ export const ADMIN_ROUTE: Route[] = [
         (m) => m.ATRIBUTOS_ROUTE
       ),
     ...canActivate(redirectUnauthorizedToLogin),
-  }
+  },
+
+  {
+    path: 'imagenes',
+    loadChildren: () =>
+      import('./imagenes/imagenes.routes').then(
+        (m) => m.IMAGENES_ROUTE
+      ),
+    ...canActivate(redirectUnauthorizedToLogin),
+  },
+
 ];
