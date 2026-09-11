@@ -1,21 +1,74 @@
 <section class="content">
     <div class="content-block">
         <div class="block-header">
-            <app-breadcrumb [title]="'Semanas'" [active_item]="'Listado de imagenes'"></app-breadcrumb>
+            <app-breadcrumb [title]="'Imágenes'" [active_item]="'Listado de imágenes'"></app-breadcrumb>
         </div>
-        <div class="p-4">
+        <div class="imagenes-page">
+            <div class="imagenes-header">
+                <div>
+                    <h2>Imágenes de trabajos</h2>
+                    <p>Consulta y elimina fotografías guardadas en Google Drive.</p>
+                </div>
+                <button mat-stroked-button type="button" (click)="cargarImagenes()" [disabled]="cargando">
+                    <mat-icon>refresh</mat-icon>
+                    Actualizar
+                </button>
+            </div>
 
-  <h3>Google Drive</h3>
+            <div class="imagenes-filtros">
+                <mat-form-field appearance="outline">
+                    <mat-label>Fecha inicial</mat-label>
+                    <input matInput [matDatepicker]="pickerInicio" [(ngModel)]="fechaInicio" (dateChange)="aplicarFiltro()">
+                    <mat-datepicker-toggle matIconSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerInicio></mat-datepicker>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                    <mat-label>Fecha final</mat-label>
+                    <input matInput [matDatepicker]="pickerFin" [(ngModel)]="fechaFin" (dateChange)="aplicarFiltro()">
+                    <mat-datepicker-toggle matIconSuffix [for]="pickerFin"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerFin></mat-datepicker>
+                </mat-form-field>
+                <button mat-button type="button" (click)="limpiarFiltro()">Limpiar fechas</button>
+            </div>
 
-  <button
-    type="button"
-    class="btn btn-primary"
-    (click)="conectarGoogleDrive()">
+            <div class="imagenes-acciones">
+                <button mat-button type="button" (click)="seleccionarTodas()" [disabled]="!imagenesFiltradas.length">
+                    <mat-icon>select_all</mat-icon>
+                    {{ seleccionadas.size === imagenesFiltradas.length && imagenesFiltradas.length ? 'Quitar selección' : 'Seleccionar todas' }}
+                </button>
+                <button mat-raised-button color="warn" type="button" (click)="eliminarSeleccionadas()" [disabled]="!seleccionadas.size || eliminando">
+                    <mat-icon>delete</mat-icon>
+                    Eliminar seleccionadas ({{ seleccionadas.size }})
+                </button>
+            </div>
 
-    Conectar Google Drive
-
-  </button>
-
-</div>
+            @if (cargando) {
+            <div class="imagenes-cargando"><mat-spinner diameter="42"></mat-spinner></div>
+            } @else if (!imagenesFiltradas.length) {
+            <div class="imagenes-vacias">No hay imágenes para el rango seleccionado.</div>
+            } @else {
+            <div class="imagenes-grid">
+                @for (imagen of imagenesFiltradas; track imagen.fileId) {
+                <article class="imagen-item">
+                    <label class="imagen-seleccion">
+                        <input type="checkbox" [checked]="estaSeleccionada(imagen.fileId)" (change)="alternarSeleccion(imagen.fileId, $any($event.target).checked)">
+                        <span>Seleccionar</span>
+                    </label>
+                    <a [href]="getImagenOpenUrl(imagen)" target="_blank" rel="noopener" class="imagen-preview-link">
+                        <img [src]="getImagenViewUrl(imagen)" [alt]="imagen.fileName || 'Imagen de trabajo'" referrerpolicy="no-referrer">
+                    </a>
+                    <div class="imagen-info">
+                        <strong>{{ imagen.fileName || 'Imagen sin nombre' }}</strong>
+                        <span>{{ imagen.trabajo }} · {{ imagen.tipo === 'revision' ? 'Revisión' : imagen.tipo === 'entrega' ? 'Entrega' : 'Gasto' }}</span>
+                        <small>{{ imagen.fecha | date:'mediumDate' }}</small>
+                    </div>
+                    <button mat-icon-button color="warn" matTooltip="Eliminar imagen" type="button" (click)="eliminarUna(imagen)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </article>
+                }
+            </div>
+            }
+        </div>
     </div>
 </section>

@@ -20,7 +20,7 @@ export class GoogleDriveService {
 
   async subirImagen(
     trabajoId: string,
-    tipoFoto: 'revision' | 'entrega',
+    tipoFoto: 'revision' | 'entrega' | 'gastos',
     archivo: File,
   ): Promise<DriveImageResponse> {
     const imagen = await this.comprimirImagen(archivo);
@@ -205,7 +205,7 @@ export class GoogleDriveService {
 
   async subirImagenes(
     trabajoId: string,
-    tipoFoto: 'revision' | 'entrega',
+    tipoFoto: 'revision' | 'entrega' | 'gastos',
     archivos: File[],
   ): Promise<DriveImageResponse[]> {
     const respuestas: DriveImageResponse[] = [];

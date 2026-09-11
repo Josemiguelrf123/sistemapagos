@@ -9,6 +9,13 @@
         <!-- Filtros para desktop -->
         <div class="card mb-3 d-none d-xl-block">
           <div class="card-body">
+            <div class="reportes-filtros-title">
+              <mat-icon>tune</mat-icon>
+              <div>
+                <h3>Filtros de trabajos</h3>
+                <p>Combina búsqueda, estado, fechas y características del trabajo.</p>
+              </div>
+            </div>
             <div class="row">
               <div class="col-md-12 mb-3">
                 <mat-form-field appearance="outline" class="w-100">
@@ -183,6 +190,13 @@
 
           <div class="card">
             <div class="body">
+              <div class="reportes-filtros-title">
+                <mat-icon>tune</mat-icon>
+                <div>
+                  <h3>Filtros de trabajos</h3>
+                  <p>Busca primero por texto o abre más filtros.</p>
+                </div>
+              </div>
               <mat-form-field appearance="outline" class="w-100">
                 <mat-label>Buscar</mat-label>
                 <input matInput [formControl]="searchControl" placeholder="No. contrato, trabajo, consultorio...">
@@ -434,6 +448,58 @@
           </div>
 
         </div>
+        <section class="comparacion-gastos-panel">
+          <div class="comparacion-gastos-intro">
+            <div class="comparacion-gastos-icon"><mat-icon>account_balance_wallet</mat-icon></div>
+            <div>
+              <h3>Comparar gastos con trabajos</h3>
+              <p>Consulta los trabajos y gastos dentro del mismo rango de fechas.</p>
+            </div>
+            <button mat-raised-button color="primary" type="button" (click)="abrirComparacion()">
+              <mat-icon>compare_arrows</mat-icon>
+              Comparar por fecha
+            </button>
+          </div>
+
+          @if (comparacionAbierta) {
+          <div class="comparacion-gastos-contenido">
+            <div class="comparacion-gastos-filtros">
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha inicial</mat-label>
+                <input matInput [matDatepicker]="pickerComparacionInicio" [formControl]="fechaComparacionInicioControl" (dateChange)="calcularComparacion()">
+                <mat-datepicker-toggle matIconSuffix [for]="pickerComparacionInicio"></mat-datepicker-toggle>
+                <mat-datepicker #pickerComparacionInicio></mat-datepicker>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha final</mat-label>
+                <input matInput [matDatepicker]="pickerComparacionFin" [formControl]="fechaComparacionFinControl" (dateChange)="calcularComparacion()">
+                <mat-datepicker-toggle matIconSuffix [for]="pickerComparacionFin"></mat-datepicker-toggle>
+                <mat-datepicker #pickerComparacionFin></mat-datepicker>
+              </mat-form-field>
+              <button mat-stroked-button type="button" (click)="limpiarComparacion()">Limpiar fechas</button>
+              <button mat-button type="button" (click)="cerrarComparacion()">Ocultar</button>
+            </div>
+            <div class="comparacion-gastos-resumen">
+              <div class="comparacion-metrica trabajos">
+                <span>Trabajos</span>
+                <strong>{{ trabajosComparacion }}</strong>
+                <small>${{ totalTrabajosComparacion.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}</small>
+              </div>
+              <div class="comparacion-metrica gastos">
+                <span>Gastos</span>
+                <strong>{{ gastosComparacion }}</strong>
+                <small>${{ totalGastosComparacion.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}</small>
+              </div>
+              <div class="comparacion-metrica diferencia">
+                <span>Diferencia</span>
+                <strong>${{ diferenciaComparacion.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}</strong>
+                <small>Trabajos menos gastos</small>
+              </div>
+            </div>
+          </div>
+          }
+        </section>
+
         <div class="mt-2 mt-md-0" style="justify-items: end;">
           <ul class="tbl-export-btn d-flex align-items-center gap-2">
             <li class="tbl-header-btn">

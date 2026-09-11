@@ -27,4 +27,13 @@ export const ADMIN_ROUTE: Route[] = [
     ...canActivate(redirectUnauthorizedToLogin),
   },
 
+  {
+    path: 'gastos',
+    loadChildren: () =>
+      import('./gastos/gastos.routes').then(
+        (m) => m.GASTOS_ROUTE
+      ),
+    ...canActivate(redirectUnauthorizedToLogin),
+  },
+
 ];

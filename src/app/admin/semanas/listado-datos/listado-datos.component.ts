@@ -164,27 +164,32 @@ export class ListadoDatosComponent {
         : '¿Estás seguro de eliminar el dato?',
     );
     if (opt.isConfirmed) {
-      for (const id of ids) {
-        await this.db.deleteDoc(
-          this.coleccionSelect.toLocaleLowerCase(),
-          id,
+      this.alertService.loanding('Eliminando datos...');
+      try {
+        for (const id of ids) {
+          await this.db.deleteDoc(
+            this.coleccionSelect.toLocaleLowerCase(),
+            id,
+          );
+        }
+
+        const idsEliminados = new Set(ids);
+        const conservarGrupo = (dato: any): boolean =>
+          !dato.__groupIds?.some((id: string) => idsEliminados.has(id));
+
+        this.datosFilter = this.datosFilter.filter(conservarGrupo);
+        this.datos = this.datos.filter(conservarGrupo);
+        this.setPagination(this.datos);
+
+        this.alertService.toast(
+          cantidad > 1
+            ? 'Grupo eliminado correctamente.'
+            : 'Dato eliminado correctamente.',
+          'snackbar-success',
         );
+      } finally {
+        this.alertService.alertClose();
       }
-
-      const idsEliminados = new Set(ids);
-      const conservarGrupo = (dato: any): boolean =>
-        !dato.__groupIds?.some((id: string) => idsEliminados.has(id));
-
-      this.datosFilter = this.datosFilter.filter(conservarGrupo);
-      this.datos = this.datos.filter(conservarGrupo);
-      this.setPagination(this.datos);
-
-      this.alertService.toast(
-        cantidad > 1
-          ? 'Grupo eliminado correctamente.'
-          : 'Dato eliminado correctamente.',
-        'snackbar-success',
-      );
     }
   }
 
