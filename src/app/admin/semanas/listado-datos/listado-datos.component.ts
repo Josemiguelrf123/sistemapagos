@@ -82,18 +82,55 @@ export class ListadoDatosComponent {
 
   async getDatos() {
     this.datos = [];
-    this.alertService.loanding('Cargando datos;');
+    this.alertService.loanding('Cargando datos...');
     const datos: any[] = [];
     const collRef = await this.db.asyncCollOrderBy(
       this.coleccionSelect.toLocaleLowerCase(),
       'nombre',
       'asc',
     );
-    collRef.forEach((doc) => datos.push(doc.data()));
+    collRef.forEach((doc) => {
+      const dato = doc.data();
+      datos.push({
+        ...dato,
+        id: doc.id,
+      });
+    });
     this.alertService.alertClose();
-    this.datos = datos;
-    this.datosFilter = datos;
+    this.datos = this.agruparDatos(datos);
+    this.datosFilter = [...this.datos];
     this.setPagination(this.datos);
+  }
+
+  private normalizarNombre(nombre: unknown): string {
+    return String(nombre ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLocaleLowerCase('es-MX');
+  }
+
+  private agruparDatos(datos: any[]): any[] {
+    const grupos = new Map<string, any>();
+
+    for (const dato of datos) {
+      const clave = this.normalizarNombre(dato.nombre);
+      const grupoExistente = grupos.get(clave);
+
+      if (grupoExistente) {
+        grupoExistente.__groupIds.push(dato.id);
+        continue;
+      }
+
+      grupos.set(clave, {
+        ...dato,
+        nombre: String(dato.nombre ?? '').replace(/\s+/g, ' ').trim(),
+        __groupIds: [dato.id],
+      });
+    }
+
+    return Array.from(grupos.values());
   }
 
   filterDatatable(event: any) {
@@ -119,22 +156,33 @@ export class ListadoDatosComponent {
   }
 
   async eliminarPago(row: any) {
-    row.idTrabajoAnterior ||= '';
+    const ids = row.__groupIds?.length ? row.__groupIds : [row.id];
+    const cantidad = ids.length;
     const opt = await this.alertService.alertConfirm(
-      '¿Estás seguro de eliminar el dato?',
+      cantidad > 1
+        ? `¿Estás seguro de eliminar este grupo? Se eliminarán ${cantidad} registros relacionados.`
+        : '¿Estás seguro de eliminar el dato?',
     );
     if (opt.isConfirmed) {
-      await this.db.deleteDoc('pagos', row.id);
-      if (row.idTrabajoAnterior !== '') {
-        await this.db.updateDoc(
-          { trabajoReferencia: null, idReferencia: '', pagado: '' },
-          'pagos',
-          row.idTrabajoAnterior,
+      for (const id of ids) {
+        await this.db.deleteDoc(
+          this.coleccionSelect.toLocaleLowerCase(),
+          id,
         );
       }
-      this.getDatos();
+
+      const idsEliminados = new Set(ids);
+      const conservarGrupo = (dato: any): boolean =>
+        !dato.__groupIds?.some((id: string) => idsEliminados.has(id));
+
+      this.datosFilter = this.datosFilter.filter(conservarGrupo);
+      this.datos = this.datos.filter(conservarGrupo);
+      this.setPagination(this.datos);
+
       this.alertService.toast(
-        'Dato eliminado correctamente',
+        cantidad > 1
+          ? 'Grupo eliminado correctamente.'
+          : 'Dato eliminado correctamente.',
         'snackbar-success',
       );
     }

@@ -80,7 +80,12 @@
                 </ng-container>
                 <ng-container matColumnDef="Nombre">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
-                  <td mat-cell *matCellDef="let row">{{row.nombre}}</td>
+                  <td mat-cell *matCellDef="let row">
+                    {{ row.nombre }}
+                    @if (row.__groupIds?.length > 1) {
+                    <small class="grupo-registros">({{ row.__groupIds.length }} registros agrupados)</small>
+                    }
+                  </td>
                 </ng-container>
                 <!-- actions -->
                 <ng-container matColumnDef="actions">
@@ -121,70 +126,14 @@
           <div class="row mt-3">
             @for (dato of datos; track dato.id) {
             <div class="col-12 mb-3">
-              <mat-card class="shadow-sm rounded" [class.card-urgente]="dato.pagado === 'SI'"
-                [class.card-normal]="dato.pagado !== 'SI'">
-                <mat-card-header>
-                  <mat-card-title class="text-primary fw-bold">
-                    {{ dato.semana }} ({{dato.partida}}) - #{{ dato.noContrato }}
-                  </mat-card-title>
-                  <mat-card-subtitle class="text-muted">{{dato.trabajo}}</mat-card-subtitle>
-                </mat-card-header>
-                <hr>
-                <mat-card-content>
-                  <div class="row">
-                    <div class="col-sm-3">
-                      <p><strong>Consultorio:</strong> {{ dato.consultorio }}</p>
-                    </div>
-                    <div class="col-sm-3">
-                      <p><strong>Tono:</strong> {{ dato.tono }}</p>
-                    </div>
-                    <div class="col-sm-3">
-                      <p><strong>Material:</strong> {{ dato.material }}</p>
-                    </div>
-                    <div class="col-sm-3">
-                      <p><strong>Fecha Registro:</strong>
-                        {{ dato.fechaRegistro ? (dato.fechaRegistro.seconds * 1000 | date: 'mediumDate') : '' }}
-                      </p>
-                    </div>
-                    <div class="col-sm-3">
-                      <p><strong>Fecha Entrega:</strong>
-                        {{ dato.fechaEntrega ? (dato.fechaEntrega.seconds * 1000 | date: 'mediumDate') : '' }}
-                      </p>
-                    </div>
-                    <div class="col-sm-3">
-                      <p><strong>Prueba o Terminada:</strong> {{ dato.pruebaTerminada }}</p>
-                    </div>
-                    <div class="col-sm-3">
-                      <p><strong>Urgente:</strong> {{ dato.urgente }}</p>
-                    </div>
-                    <div class="col-sm-3">
-                      <p><strong>Placa Base:</strong> {{ dato.placaBase }}</p>
-                    </div>
-                    <div class="col-sm-4">
-                      <p class="fw-semibold text-purple">
-                        <span class="compact-label">Precio Total:</span>
-                        ${{ (+dato.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
-                      </p>
-                    </div>
-                    <div class="col-sm-4">
-                      <p class="fw-semibold text-success">
-                        <span class="compact-label">Total por cobrar:</span>
-                        ${{ (+dato.totalPorCobrar).toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}
-                      </p>
-                    </div>
-                    @if (dato.observaciones !== '') {
-                    <div class="col-sm-12">
-                      <p class="mt-2"><strong>Observaciones:</strong> {{ dato.observaciones }}</p>
-                    </div>
-                    }
-                  </div>
-                </mat-card-content>
-                <mat-card-actions class="d-flex gap-2" style="align-self: center;">
+              <div class="dato-item-responsive">
+                <div class="dato-card-content-responsive">
+                  <span class="dato-nombre-responsive">{{ dato.nombre }}</span>
                   <button mat-icon-button color="warn" matTooltip="Eliminar" (click)="eliminarPago(dato)">
                     <mat-icon>delete</mat-icon>
                   </button>
-                </mat-card-actions>
-              </mat-card>
+                </div>
+              </div>
             </div>
             }
           </div>

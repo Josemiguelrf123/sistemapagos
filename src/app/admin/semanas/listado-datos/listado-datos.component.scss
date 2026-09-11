@@ -28,6 +28,37 @@
   color: #2e7d32;
 }
 
+.grupo-registros {
+  display: block;
+  margin-top: 3px;
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.dato-item-responsive {
+  border-left: 5px solid #6d298b !important;
+  background: #fff;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
+}
+
+.dato-card-content-responsive {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 12px 16px !important;
+}
+
+.dato-nombre-responsive {
+  min-width: 0;
+  color: #146df5;
+  font-size: 1.1rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
 .card-urgente {
   border-left: 5px solid #08591c;
   background-color: rgb(180 255 184 / 24%);
@@ -426,5 +457,24 @@ mat-paginator {
     height: 100%;
     border-radius: 0;
     padding: 1rem;
+  }
+}
+
+/* El listado de tarjetas necesita su propio desplazamiento en pantallas responsivas. */
+@media (max-width: 1199px) {
+  section.content {
+    height: calc(100vh - 60px);
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 24px;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .d-xl-none {
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
 }
