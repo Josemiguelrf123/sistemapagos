@@ -646,17 +646,17 @@
 
 
                           <!-- BOTÓN AGREGAR -->
-                          @if (fotoRevision.length < MAX_FOTOS) { <label class="photo-add" for="fotoRevisionInput">
-
+                          @if (fotoRevision.length < MAX_FOTOS) {
+                          <label class="photo-add" for="fotoRevisionInput">
                             <input id="fotoRevisionInput" type="file" accept="image/jpeg,image/png,image/webp" multiple
-                              capture="environment" (change)="seleccionarFotoRevision($event)" hidden>
+                              (change)="seleccionarFotoRevision($event)" hidden>
 
                             <div class="photo-add-icon">
                               <mat-icon>add</mat-icon>
                             </div>
 
                             <strong>
-                              Agregar fotos
+                              Elegir de galería
                             </strong>
 
                             <span>
@@ -664,6 +664,18 @@
                             </span>
 
                             </label>
+
+                          <label class="photo-add photo-add-camera" for="fotoRevisionCameraInput">
+                            <input id="fotoRevisionCameraInput" type="file" accept="image/jpeg,image/png,image/webp"
+                              capture="environment" (change)="seleccionarFotoRevision($event)" hidden>
+
+                            <div class="photo-add-icon">
+                              <mat-icon>photo_camera</mat-icon>
+                            </div>
+
+                            <strong>Tomar foto</strong>
+                            <span>Usar la cámara</span>
+                          </label>
 
                             }
 
@@ -773,17 +785,17 @@
 
 
                           <!-- BOTÓN AGREGAR -->
-                          @if (fotoEntrega.length < MAX_FOTOS) { <label class="photo-add" for="fotoEntregaInput">
-
+                          @if (fotoEntrega.length < MAX_FOTOS) {
+                          <label class="photo-add" for="fotoEntregaInput">
                             <input id="fotoEntregaInput" type="file" accept="image/jpeg,image/png,image/webp" multiple
-                              capture="environment" (change)="seleccionarFotoEntrega($event)" hidden>
+                              (change)="seleccionarFotoEntrega($event)" hidden>
 
                             <div class="photo-add-icon">
                               <mat-icon>add</mat-icon>
                             </div>
 
                             <strong>
-                              Agregar fotos
+                              Elegir de galería
                             </strong>
 
                             <span>
@@ -791,6 +803,18 @@
                             </span>
 
                             </label>
+
+                          <label class="photo-add photo-add-camera" for="fotoEntregaCameraInput">
+                            <input id="fotoEntregaCameraInput" type="file" accept="image/jpeg,image/png,image/webp"
+                              capture="environment" (change)="seleccionarFotoEntrega($event)" hidden>
+
+                            <div class="photo-add-icon">
+                              <mat-icon>photo_camera</mat-icon>
+                            </div>
+
+                            <strong>Tomar foto</strong>
+                            <span>Usar la cámara</span>
+                          </label>
 
                             }
 

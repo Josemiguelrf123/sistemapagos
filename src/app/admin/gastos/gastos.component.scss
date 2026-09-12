@@ -121,6 +121,13 @@
   gap: 12px;
 }
 
+.archivos-gasto-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .gasto-modal-header {
   margin-bottom: 20px;
 
@@ -182,8 +189,26 @@
   background: #3f51b5;
   cursor: pointer;
 
+  mat-icon {
+    flex: 0 0 auto;
+  }
+
+  &:hover {
+    background: #33439b;
+  }
+
   input {
     display: none;
+  }
+}
+
+.boton-tomar-foto {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .boton-tomar-foto {
+    display: inline-flex;
   }
 }
 
@@ -413,6 +438,15 @@
   .archivos-gasto-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .archivos-gasto-acciones {
+    width: 100%;
+  }
+
+  .boton-adjuntar {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 
   .gasto-archivos-modal {

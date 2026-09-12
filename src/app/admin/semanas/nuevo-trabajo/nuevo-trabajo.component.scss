@@ -820,6 +820,16 @@ input[type='number'] {
     }
 }
 
+.photo-add-camera {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .photo-add-camera {
+        display: flex;
+    }
+}
+
 .photo-add-icon {
     width: 32px;
     height: 32px;

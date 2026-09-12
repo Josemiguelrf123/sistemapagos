@@ -130,11 +130,20 @@
             <h3>Comprobantes</h3>
             <p>Adjunta una o varias imágenes.</p>
           </div>
-          <label class="boton-adjuntar">
-            <mat-icon>upload_file</mat-icon>
-            Adjuntar
-            <input type="file" accept="image/jpeg,image/png,image/webp" multiple (change)="seleccionarArchivos($event)">
-          </label>
+          <div class="archivos-gasto-acciones">
+            <label class="boton-adjuntar" for="gastoGaleriaInput">
+              <mat-icon>photo_library</mat-icon>
+              Elegir de galería
+              <input id="gastoGaleriaInput" type="file" accept="image/jpeg,image/png,image/webp" multiple
+                (change)="seleccionarArchivos($event)">
+            </label>
+            <label class="boton-adjuntar boton-tomar-foto" for="gastoCamaraInput">
+              <mat-icon>photo_camera</mat-icon>
+              Tomar foto
+              <input id="gastoCamaraInput" type="file" accept="image/jpeg,image/png,image/webp"
+                capture="environment" (change)="seleccionarArchivos($event)">
+            </label>
+          </div>
         </div>
 
         @if (gastoEditando?.archivos?.length) {
