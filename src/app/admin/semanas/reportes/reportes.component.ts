@@ -144,6 +144,15 @@ export class ReportesComponent {
   totalGeneral = 0;
   totalPartida1 = 0;
   totalPartida2 = 0;
+  gastos: any[] = [];
+  comparacionAbierta = false;
+  fechaComparacionInicioControl = new FormControl('');
+  fechaComparacionFinControl = new FormControl('');
+  totalTrabajosComparacion = 0;
+  totalGastosComparacion = 0;
+  diferenciaComparacion = 0;
+  trabajosComparacion = 0;
+  gastosComparacion = 0;
 
   constructor(
     private db: FirestoreService,
@@ -155,7 +164,90 @@ export class ReportesComponent {
     }
     this.meses = this.getMesesDesde2025();
     this.getPagos();
+    this.getGastos();
     this.setupFilterListeners();
+  }
+
+  async getGastos(): Promise<void> {
+    try {
+      const snapshot = await this.db.asyncCollOrderBy('gastos', 'fecha', 'desc');
+      this.gastos = snapshot.docs.map((documento) => ({
+        id: documento.id,
+        ...documento.data(),
+      }));
+    } catch (error) {
+      console.error('No fue posible cargar los gastos para el reporte.', error);
+      this.gastos = [];
+    }
+  }
+
+  abrirComparacion(): void {
+    this.comparacionAbierta = true;
+    this.calcularComparacion();
+  }
+
+  cerrarComparacion(): void {
+    this.comparacionAbierta = false;
+  }
+
+  calcularComparacion(): void {
+    const inicio = this.inicioDelDia(this.fechaComparacionInicioControl.value);
+    const fin = this.finDelDia(this.fechaComparacionFinControl.value);
+    const trabajos = this.pagos.filter((pago: any) => {
+      const fecha = this.convertirFecha(pago.fechaRegistro);
+      return this.estaEnRango(fecha, inicio, fin);
+    });
+    const gastos = this.gastos.filter((gasto: any) => {
+      const fecha = this.convertirFecha(gasto.fecha);
+      return this.estaEnRango(fecha, inicio, fin);
+    });
+
+    this.trabajosComparacion = trabajos.length;
+    this.gastosComparacion = gastos.length;
+    this.totalTrabajosComparacion = trabajos.reduce(
+      (total: number, trabajo: any) => total + (Number(trabajo.totalPorCobrar) || 0),
+      0,
+    );
+    this.totalGastosComparacion = gastos.reduce(
+      (total: number, gasto: any) => total + (Number(gasto.monto) || 0),
+      0,
+    );
+    this.diferenciaComparacion = this.totalTrabajosComparacion - this.totalGastosComparacion;
+  }
+
+  limpiarComparacion(): void {
+    this.fechaComparacionInicioControl.reset('');
+    this.fechaComparacionFinControl.reset('');
+    this.calcularComparacion();
+  }
+
+  private convertirFecha(valor: any): Date | null {
+    if (!valor) return null;
+    if (valor instanceof Date) return valor;
+    if (typeof valor.toDate === 'function') return valor.toDate();
+    if (valor.seconds) return new Date(valor.seconds * 1000);
+    const fecha = new Date(valor);
+    return Number.isNaN(fecha.getTime()) ? null : fecha;
+  }
+
+  private inicioDelDia(valor: any): Date | null {
+    const fecha = this.convertirFecha(valor);
+    if (!fecha) return null;
+    fecha.setHours(0, 0, 0, 0);
+    return fecha;
+  }
+
+  private finDelDia(valor: any): Date | null {
+    const fecha = this.convertirFecha(valor);
+    if (!fecha) return null;
+    fecha.setHours(23, 59, 59, 999);
+    return fecha;
+  }
+
+  private estaEnRango(fecha: Date | null, inicio: Date | null, fin: Date | null): boolean {
+    if (!fecha) return false;
+    const tiempo = fecha.getTime();
+    return (!inicio || tiempo >= inicio.getTime()) && (!fin || tiempo <= fin.getTime());
   }
 
   // ngOnDestroy(): void {

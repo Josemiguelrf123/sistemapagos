@@ -1,0 +1,587 @@
+@if (tieneFotos) {
+
+  <!-- ============================= -->
+  <!-- MODO TABLA -->
+  <!-- ============================= -->
+
+  @if (modo === 'tabla') {
+
+    <button
+      type="button"
+      class="btn-ver-imagenes"
+      (click)="toggleFotos()"
+    >
+      <mat-icon>photo_library</mat-icon>
+
+      <span>Ver imágenes</span>
+
+      <span class="cantidad-imagenes">
+        {{ cantidadFotos }}
+      </span>
+    </button>
+
+    @if (mostrarFotos) {
+
+      <div
+        class="imagenes-modal-backdrop"
+        (click)="cerrarFotos()"
+      >
+
+        <div
+          class="imagenes-modal"
+          (click)="$event.stopPropagation()"
+        >
+
+          <div class="imagenes-modal-header">
+
+            <div>
+              <h3>Imágenes del trabajo</h3>
+
+              <span>
+                {{ cantidadFotos }}
+                {{ cantidadFotos === 1 ? 'imagen' : 'imágenes' }}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              class="btn-cerrar-modal"
+              (click)="cerrarFotos()"
+              aria-label="Cerrar"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+
+          </div>
+
+
+          <!-- REVISION -->
+
+          @if (fotosRevision.length > 0) {
+
+            <section class="grupo-imagenes">
+
+              <div class="grupo-imagenes-header">
+
+                <div class="grupo-icono revision">
+                  <mat-icon>fact_check</mat-icon>
+                </div>
+
+                <div>
+                  <h4>Revisión</h4>
+
+                  <span>
+                    {{ fotosRevision.length }}
+                    {{ fotosRevision.length === 1 ? 'imagen' : 'imágenes' }}
+                  </span>
+                </div>
+
+              </div>
+
+
+              <div class="galeria-imagenes">
+
+                @for (
+                  foto of fotosRevision;
+                  track foto.fileId;
+                  let i = $index
+                ) {
+
+                  <button
+                    type="button"
+                    class="imagen-item"
+                    (click)="abrirFotoRevision(i)"
+                  >
+
+                    <img
+                      [src]="
+                        'https://drive.google.com/thumbnail?id=' +
+                        foto.fileId +
+                        '&sz=w1200'
+                      "
+                      [alt]="
+                        foto.fileName ||
+                        'Fotografía de revisión'
+                      "
+                      referrerpolicy="no-referrer"
+                    />
+
+                    <span class="imagen-overlay">
+                      <mat-icon>zoom_in</mat-icon>
+                    </span>
+
+                  </button>
+
+                }
+
+              </div>
+
+            </section>
+
+          }
+
+
+          <!-- ENTREGA -->
+
+          @if (fotosEntrega.length > 0) {
+
+            <section class="grupo-imagenes">
+
+              <div class="grupo-imagenes-header">
+
+                <div class="grupo-icono entrega">
+                  <mat-icon>inventory_2</mat-icon>
+                </div>
+
+                <div>
+                  <h4>Entrega</h4>
+
+                  <span>
+                    {{ fotosEntrega.length }}
+                    {{ fotosEntrega.length === 1 ? 'imagen' : 'imágenes' }}
+                  </span>
+                </div>
+
+              </div>
+
+
+              <div class="galeria-imagenes">
+
+                @for (
+                  foto of fotosEntrega;
+                  track foto.fileId;
+                  let i = $index
+                ) {
+
+                  <button
+                    type="button"
+                    class="imagen-item"
+                    (click)="abrirFotoEntrega(i)"
+                  >
+
+                    <img
+                      [src]="
+                        'https://drive.google.com/thumbnail?id=' +
+                        foto.fileId +
+                        '&sz=w1200'
+                      "
+                      [alt]="
+                        foto.fileName ||
+                        'Fotografía de entrega'
+                      "
+                      referrerpolicy="no-referrer"
+                    />
+
+                    <span class="imagen-overlay">
+                      <mat-icon>zoom_in</mat-icon>
+                    </span>
+
+                  </button>
+
+                }
+
+              </div>
+
+            </section>
+
+          }
+
+        </div>
+
+      </div>
+
+    }
+
+  }
+
+
+  <!-- ============================= -->
+  <!-- MODO TARJETA -->
+  <!-- ============================= -->
+
+  @if (modo === 'tarjeta') {
+
+    <div class="tarjeta-imagenes">
+
+      <button
+        type="button"
+        class="btn-ver-imagenes"
+        (click)="toggleFotos()"
+      >
+
+        <mat-icon>
+          {{ mostrarFotos ? 'expand_less' : 'photo_library' }}
+        </mat-icon>
+
+        <span>
+          {{ mostrarFotos ? 'Ocultar imágenes' : 'Ver imágenes' }}
+        </span>
+
+        <span class="cantidad-imagenes">
+          {{ cantidadFotos }}
+        </span>
+
+      </button>
+
+
+      @if (mostrarFotos) {
+
+        <div class="imagenes-expandibles">
+
+          <!-- REVISION -->
+
+          @if (fotosRevision.length > 0) {
+
+            <div class="grupo-expandible">
+
+              <h4>
+                <mat-icon>fact_check</mat-icon>
+                Revisión
+              </h4>
+
+              <div class="galeria-imagenes">
+
+                @for (
+                  foto of fotosRevision;
+                  track foto.fileId;
+                  let i = $index
+                ) {
+
+                  <button
+                    type="button"
+                    class="imagen-item"
+                    (click)="abrirFotoRevision(i)"
+                  >
+
+                    <img
+                      [src]="
+                        'https://drive.google.com/thumbnail?id=' +
+                        foto.fileId +
+                        '&sz=w1200'
+                      "
+                      [alt]="
+                        foto.fileName ||
+                        'Fotografía de revisión'
+                      "
+                      referrerpolicy="no-referrer"
+                    />
+
+                    <span class="imagen-overlay">
+                      <mat-icon>zoom_in</mat-icon>
+                    </span>
+
+                  </button>
+
+                }
+
+              </div>
+
+            </div>
+
+          }
+
+
+          <!-- ENTREGA -->
+
+          @if (fotosEntrega.length > 0) {
+
+            <div class="grupo-expandible">
+
+              <h4>
+                <mat-icon>inventory_2</mat-icon>
+                Entrega
+              </h4>
+
+              <div class="galeria-imagenes">
+
+                @for (
+                  foto of fotosEntrega;
+                  track foto.fileId;
+                  let i = $index
+                ) {
+
+                  <button
+                    type="button"
+                    class="imagen-item"
+                    (click)="abrirFotoEntrega(i)"
+                  >
+
+                    <img
+                      [src]="
+                        'https://drive.google.com/thumbnail?id=' +
+                        foto.fileId +
+                        '&sz=w1200'
+                      "
+                      [alt]="
+                        foto.fileName ||
+                        'Fotografía de entrega'
+                      "
+                      referrerpolicy="no-referrer"
+                    />
+
+                    <span class="imagen-overlay">
+                      <mat-icon>zoom_in</mat-icon>
+                    </span>
+
+                  </button>
+
+                }
+
+              </div>
+
+            </div>
+
+          }
+
+        </div>
+
+      }
+
+    </div>
+
+  }
+
+
+  <!-- ============================= -->
+  <!-- MODO SELECCIONADO -->
+  <!-- ============================= -->
+
+  @if (modo === 'seleccionado-legacy') {
+
+    <section class="imagenes-seleccionadas">
+
+      <div class="titulo-imagenes">
+
+        <div class="titulo-icono">
+          <mat-icon>photo_library</mat-icon>
+        </div>
+
+        <div>
+
+          <h3>Imágenes del trabajo seleccionado</h3>
+
+          <span>
+            {{ cantidadFotos }}
+            {{ cantidadFotos === 1 ? 'imagen' : 'imágenes' }}
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- REVISION -->
+
+      @if (fotosRevision.length > 0) {
+
+        <div class="grupo-expandible">
+
+          <h4>
+            <mat-icon>fact_check</mat-icon>
+            Revisión
+          </h4>
+
+          <div class="galeria-imagenes">
+
+            @for (
+              foto of fotosRevision;
+              track foto.fileId;
+              let i = $index
+            ) {
+
+              <button
+                type="button"
+                class="imagen-item"
+                (click)="abrirFotoRevision(i)"
+              >
+
+                <img
+                  [src]="
+                    'https://drive.google.com/thumbnail?id=' +
+                    foto.fileId +
+                    '&sz=w1200'
+                  "
+                  [alt]="
+                    foto.fileName ||
+                    'Fotografía de revisión'
+                  "
+                  referrerpolicy="no-referrer"
+                />
+
+                <span class="imagen-overlay">
+                  <mat-icon>zoom_in</mat-icon>
+                </span>
+
+              </button>
+
+            }
+
+          </div>
+
+        </div>
+
+      }
+
+
+      <!-- ENTREGA -->
+
+      @if (fotosEntrega.length > 0) {
+
+        <div class="grupo-expandible">
+
+          <h4>
+            <mat-icon>inventory_2</mat-icon>
+            Entrega
+          </h4>
+
+          <div class="galeria-imagenes">
+
+            @for (
+              foto of fotosEntrega;
+              track foto.fileId;
+              let i = $index
+            ) {
+
+              <button
+                type="button"
+                class="imagen-item"
+                (click)="abrirFotoEntrega(i)"
+              >
+
+                <img
+                  [src]="
+                    'https://drive.google.com/thumbnail?id=' +
+                    foto.fileId +
+                    '&sz=w1200'
+                  "
+                  [alt]="
+                    foto.fileName ||
+                    'Fotografía de entrega'
+                  "
+                  referrerpolicy="no-referrer"
+                />
+
+                <span class="imagen-overlay">
+                  <mat-icon>zoom_in</mat-icon>
+                </span>
+
+              </button>
+
+            }
+
+          </div>
+
+        </div>
+
+      }
+
+    </section>
+
+  }
+
+  @if (modo === 'seleccionado') {
+    <div class="selected-photos-responsive">
+      <div class="selected-responsive-toggle">
+        <button
+          type="button"
+          class="btn-fotos-responsive"
+          (click)="toggleFotos()"
+          [attr.aria-expanded]="mostrarFotos"
+          aria-controls="fotos-trabajo-seleccionado">
+          <span class="btn-fotos-responsive-left">
+            <mat-icon>photo_library</mat-icon>
+            {{ mostrarFotos ? 'Ocultar imágenes' : 'Ver imágenes' }}
+          </span>
+          <span class="btn-fotos-responsive-count">{{ cantidadFotos }}</span>
+        </button>
+      </div>
+
+      <section
+        id="fotos-trabajo-seleccionado"
+        class="photos-panel selected-photos-panel"
+        [class.selected-photos-panel-collapsed]="!mostrarFotos">
+        <div class="photos-panel-header">
+          <div class="photos-heading">
+            <div class="photos-heading-icon">
+              <mat-icon>photo_library</mat-icon>
+            </div>
+            <div>
+              <h3>Fotografías del trabajo</h3>
+              <p>Evidencia de la revisión y entrega.</p>
+            </div>
+          </div>
+          <div class="photos-total">{{ cantidadFotos }} / 20</div>
+        </div>
+
+        <div class="photo-groups">
+          <div class="photo-group">
+            <div class="photo-group-header">
+              <div class="photo-group-title">
+                <div class="photo-group-icon revision">
+                  <mat-icon>fact_check</mat-icon>
+                </div>
+                <div>
+                  <h4>Revisión</h4>
+                </div>
+              </div>
+              <div class="photo-counter">{{ fotosRevision.length }} / 10</div>
+            </div>
+
+            @if (fotosRevision.length) {
+              <div class="photo-gallery">
+                @for (foto of fotosRevision; track foto.fileId; let i = $index) {
+                  <button type="button" class="photo-item" (click)="abrirFotoRevision(i)">
+                    <img
+                      [src]="'https://drive.google.com/thumbnail?id=' + foto.fileId + '&sz=w1200'"
+                      [alt]="foto.fileName || 'Fotografía de revisión'"
+                      referrerpolicy="no-referrer" />
+                    <span class="photo-number">{{ i + 1 }}</span>
+                  </button>
+                }
+              </div>
+            } @else {
+              <div class="photo-empty-message">
+                <mat-icon>photo_camera</mat-icon>
+                <span>Todavía no hay fotografías de revisión.</span>
+              </div>
+            }
+          </div>
+
+          <div class="photo-group">
+            <div class="photo-group-header">
+              <div class="photo-group-title">
+                <div class="photo-group-icon entrega">
+                  <mat-icon>inventory_2</mat-icon>
+                </div>
+                <div>
+                  <h4>Entrega</h4>
+                </div>
+              </div>
+              <div class="photo-counter">{{ fotosEntrega.length }} / 10</div>
+            </div>
+
+            @if (fotosEntrega.length) {
+              <div class="photo-gallery">
+                @for (foto of fotosEntrega; track foto.fileId; let i = $index) {
+                  <button type="button" class="photo-item" (click)="abrirFotoEntrega(i)">
+                    <img
+                      [src]="'https://drive.google.com/thumbnail?id=' + foto.fileId + '&sz=w1200'"
+                      [alt]="foto.fileName || 'Fotografía de entrega'"
+                      referrerpolicy="no-referrer" />
+                    <span class="photo-number">{{ i + 1 }}</span>
+                  </button>
+                }
+              </div>
+            } @else {
+              <div class="photo-empty-message">
+                <mat-icon>photo_camera</mat-icon>
+                <span>Todavía no hay fotografías de entrega.</span>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+    </div>
+  }
+
+}

@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { FotosTrabajoComponent } from './../../../shared/components/fotos-trabajo/fotos-trabajo.component';
+import { Component, HostListener } from '@angular/core';
 import {
   UntypedFormBuilder,
   UntypedFormGroup,
@@ -13,12 +14,9 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { BreadcrumbComponent } from '@shared/components/breadcrumb/breadcrumb.component';
-import { FirestoreService } from '@core/service/firestore.service';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { AlertService } from '@core/service/alert.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Pago } from '../componentes/pago.model';
 import { MatTableModule } from '@angular/material/table';
@@ -27,6 +25,10 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatRadioModule } from '@angular/material/radio';
 import { DatePipe } from '@angular/common';
+import { BreadcrumbComponent } from '../../../shared/components/breadcrumb/breadcrumb.component';
+import { FirestoreService } from '../../../core/service/firestore.service';
+import { AlertService } from '../../../core/service/alert.service';
+import { GoogleDriveService } from '../../../core/service/google-drive.service';
 @Component({
   selector: 'app-nuevo-trabajo',
   templateUrl: './nuevo-trabajo.component.html',
@@ -51,9 +53,15 @@ import { DatePipe } from '@angular/common';
     MatChipsModule,
     MatRadioModule,
     DatePipe,
+    FotosTrabajoComponent,
   ],
 })
 export class NuevoTrabajoComponent {
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.ajustarViewerAlCambiarPantalla();
+  }
+
   pagosForm!: UntypedFormGroup;
   pago!: Pago;
   edit = false;
@@ -86,17 +94,64 @@ export class NuevoTrabajoComponent {
     'fechaEntrega',
     'precioTotal',
     'cobrado',
+    'imagenes',
   ];
   selectedItemOriginal: any = null;
   selectedItem: any = null;
+  imagenesExpandida = false;
+  imagenesSeleccionadaExpandida = false;
   anioActual!: number;
+  fotoRevision: File[] = [];
+  fotoEntrega: File[] = [];
+  fotosGuardadasRevision: any[] = [];
+  fotosGuardadasEntrega: any[] = [];
+
+  previewRevision: string[] = [];
+  previewEntrega: string[] = [];
+
+  subiendoRevision = false;
+  subiendoEntrega = false;
+
+  readonly MAX_FOTOS = 10;
+
+  readonly MAX_TAMANO_FOTO = 15 * 1024 * 1024; // 15 MB
+
+  readonly TIPOS_FOTO_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
+
+  fotoViewerAbierto = false;
+  fotosViewer: any[] = [];
+  indiceFotoViewer = 0;
+  zoomFotoViewer = 1;
+
+  posicionXFotoViewer = 0;
+  posicionYFotoViewer = 0;
+
+  arrastrandoFotoViewer = false;
+  inicioArrastreX = 0;
+  inicioArrastreY = 0;
+
+  distanciaInicialPinch = 0;
+  zoomInicialPinch = 1;
+
+  dedosIniciales = 0;
+
+  puntoPinchX = 0;
+  puntoPinchY = 0;
+
+  arrastrandoTouch = false;
+  inicioTouchX = 0;
+  inicioTouchY = 0;
+
+  modalImagenesAbierto = false;
+  trabajoImagenesSeleccionado: any = null;
 
   constructor(
     private fb: UntypedFormBuilder,
     private db: FirestoreService,
     private alertService: AlertService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private googleDriveService: GoogleDriveService,
   ) {
     this.getPagos();
     this.getValueTrabajos();
@@ -166,15 +221,15 @@ export class NuevoTrabajoComponent {
       '==',
       this.anioActual,
       'nombre',
-      'desc'
+      'desc',
     );
     collRef.forEach((doc) => dataSemanas.push(doc.data()));
 
     // 🧼 Normaliza: sin tildes, minúsculas, trim
     const normalizar = (texto: string): string =>
       texto
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .trim()
         .toLowerCase();
 
@@ -189,8 +244,8 @@ export class NuevoTrabajoComponent {
     }
 
     // 🔠 Capitaliza la primera letra
-    const resultadoFinal = Array.from(mapaUnicos.values()).map((str) =>
-      str.charAt(0).toUpperCase() + str.slice(1)
+    const resultadoFinal = Array.from(mapaUnicos.values()).map(
+      (str) => str.charAt(0).toUpperCase() + str.slice(1),
     );
 
     // 🔢 Ordenar por número descendente (Semana 10 antes que Semana 2)
@@ -222,7 +277,7 @@ export class NuevoTrabajoComponent {
       '!=',
       'SI',
       'fechaRegistro',
-      'desc'
+      'desc',
     );
     collRef.forEach((pagos) => dataPagos.push(pagos.data()));
     dataPagos.forEach((item: Pago) => {
@@ -232,8 +287,15 @@ export class NuevoTrabajoComponent {
       item.trabajo = this.capitalizarPrimeraLetra(item.trabajo);
       item.material = this.capitalizarPrimeraLetra(item.material);
       item.tono = item.tono !== '' ? item.tono.toLocaleUpperCase() : item.tono;
+      item.fotografias ??= {
+        revision: [],
+        entrega: [],
+      };
     });
-    this.originalData = dataPagos.filter((res: any) => res.semana !== this.semanas[0]);
+
+    this.originalData = dataPagos.filter(
+      (res: any) => res.semana !== this.semanas[0],
+    );
     this.filteredData = [...this.originalData];
   }
 
@@ -247,8 +309,8 @@ export class NuevoTrabajoComponent {
     // 🔤 Normalizar para comparar: quitar acentos, minúsculas, trim
     const normalizar = (texto: string): string =>
       texto
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .trim()
         .toLowerCase();
 
@@ -256,9 +318,9 @@ export class NuevoTrabajoComponent {
     const capitalizar = (texto: string): string =>
       texto
         .toLowerCase()
-        .split(" ")
-        .map(p => p.charAt(0).toUpperCase() + p.slice(1))
-        .join(" ");
+        .split(' ')
+        .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+        .join(' ');
 
     // 🧹 Eliminar duplicados con un Map
     const mapaUnicos = new Map<string, string>();
@@ -274,8 +336,8 @@ export class NuevoTrabajoComponent {
 
     // 🔢 Ordenar por número si hay, si no alfabéticamente
     const ordenadas = resultadoFinal.sort((a, b) => {
-      const numA = parseInt(a.replace(/\D/g, ""), 10);
-      const numB = parseInt(b.replace(/\D/g, ""), 10);
+      const numA = parseInt(a.replace(/\D/g, ''), 10);
+      const numB = parseInt(b.replace(/\D/g, ''), 10);
 
       if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
       return a.localeCompare(b);
@@ -295,8 +357,8 @@ export class NuevoTrabajoComponent {
     // 🔤 Normaliza: quita acentos, pasa a minúsculas, recorta espacios
     const normalizar = (texto: string): string =>
       texto
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .trim()
         .toLowerCase();
 
@@ -312,13 +374,13 @@ export class NuevoTrabajoComponent {
 
     // 🔠 Convertir a MAYÚSCULAS como lo pediste
     const resultadoFinal = Array.from(mapaUnicos.values()).map((str) =>
-      str.toUpperCase()
+      str.toUpperCase(),
     );
 
     // 🔢 Ordenar por número si hay, si no alfabéticamente
     const ordenadas = resultadoFinal.sort((a, b) => {
-      const numA = parseInt(a.replace(/\D/g, ""), 10);
-      const numB = parseInt(b.replace(/\D/g, ""), 10);
+      const numA = parseInt(a.replace(/\D/g, ''), 10);
+      const numB = parseInt(b.replace(/\D/g, ''), 10);
 
       if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
       return a.localeCompare(b);
@@ -332,14 +394,18 @@ export class NuevoTrabajoComponent {
     this.consultorios = [];
 
     const dataConsultorios: any[] = [];
-    const collRef = await this.db.asyncCollOrderBy('consultorios', 'nombre', 'asc');
+    const collRef = await this.db.asyncCollOrderBy(
+      'consultorios',
+      'nombre',
+      'asc',
+    );
     collRef.forEach((doc) => dataConsultorios.push(doc.data()));
 
     // Función para limpiar (quita acentos, espacios, minúsculas)
     const normalizar = (texto: string): string =>
       texto
-        .normalize("NFD") // separa letras acentuadas
-        .replace(/[\u0300-\u036f]/g, "") // elimina los acentos
+        .normalize('NFD') // separa letras acentuadas
+        .replace(/[\u0300-\u036f]/g, '') // elimina los acentos
         .trim()
         .toLowerCase();
 
@@ -366,8 +432,8 @@ export class NuevoTrabajoComponent {
 
     // Ordenar por número si existe, si no por nombre
     const ordenadas = resultadoFinal.sort((a, b) => {
-      const numA = parseInt(a.replace(/\D/g, ""), 10);
-      const numB = parseInt(b.replace(/\D/g, ""), 10);
+      const numA = parseInt(a.replace(/\D/g, ''), 10);
+      const numB = parseInt(b.replace(/\D/g, ''), 10);
 
       if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
       return a.localeCompare(b);
@@ -377,19 +443,22 @@ export class NuevoTrabajoComponent {
     this.consultoriosFilter = [...ordenadas];
   }
 
-
   async getValueMateriales() {
     this.materiales = [];
 
     const dataMateriales: any[] = [];
-    const collRef = await this.db.asyncCollOrderBy('materiales', 'nombre', 'asc');
+    const collRef = await this.db.asyncCollOrderBy(
+      'materiales',
+      'nombre',
+      'asc',
+    );
     collRef.forEach((material) => dataMateriales.push(material.data()));
 
     // 🔧 Función para limpiar: quita acentos, minúsculas, trim
     const normalizar = (texto: string): string =>
       texto
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .trim()
         .toLowerCase();
 
@@ -405,14 +474,14 @@ export class NuevoTrabajoComponent {
     }
 
     // ✍️ Paso 2: capitalizar correctamente (solo la primera letra)
-    const resultadoFinal = Array.from(mapaUnicos.values()).map((str) =>
-      str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+    const resultadoFinal = Array.from(mapaUnicos.values()).map(
+      (str) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase(),
     );
 
     // 📊 Paso 3: ordenar (por número si hay, si no alfabético)
     const ordenadas = resultadoFinal.sort((a, b) => {
-      const numA = parseInt(a.replace(/\D/g, ""), 10);
-      const numB = parseInt(b.replace(/\D/g, ""), 10);
+      const numA = parseInt(a.replace(/\D/g, ''), 10);
+      const numB = parseInt(b.replace(/\D/g, ''), 10);
 
       if (!isNaN(numA) && !isNaN(numB)) {
         return numB - numA; // mayor a menor si tienen número
@@ -433,6 +502,8 @@ export class NuevoTrabajoComponent {
       this.anioActual = new Date().getFullYear();
       const blankObject = {} as Pago;
       this.pago = new Pago(blankObject);
+      this.fotosGuardadasRevision = [];
+      this.fotosGuardadasEntrega = [];
       this.crearFormulario();
       this.getValueSemanas();
     }
@@ -442,6 +513,10 @@ export class NuevoTrabajoComponent {
     try {
       const doc = await this.db.asyncDoc('pagos', id);
       this.pago = doc.data() as Pago;
+      const fotografias = (this.pago as any).fotografias || {};
+
+      this.fotosGuardadasRevision = fotografias.revision || [];
+      this.fotosGuardadasEntrega = fotografias.entrega || [];
       this.pago.partida ||= 'Partida 1';
       this.pago.trabajoAnterior ||= null;
       this.pago.fechaEntrega ||= '';
@@ -449,16 +524,18 @@ export class NuevoTrabajoComponent {
       this.edit = true;
       if (this.pago.fechaRegistro) {
         this.pago.fechaRegistro = new Date(
-          this.pago.fechaRegistro.seconds * 1000
+          this.pago.fechaRegistro.seconds * 1000,
         );
       }
       if (this.pago.fechaEntrega) {
         this.pago.fechaEntrega = new Date(
-          this.pago.fechaEntrega.seconds * 1000
+          this.pago.fechaEntrega.seconds * 1000,
         );
       }
       this.selectedItem = this.pago.trabajoAnterior;
-      this.selectedItemOriginal = JSON.parse(JSON.stringify(this.pago.trabajoAnterior));
+      this.selectedItemOriginal = JSON.parse(
+        JSON.stringify(this.pago.trabajoAnterior),
+      );
       this.getValueSemanas();
       this.crearFormulario();
     } catch (error) {
@@ -521,12 +598,12 @@ export class NuevoTrabajoComponent {
   async onSubmit() {
     if (this.pagosForm.controls['fechaRegistro'].value !== '') {
       this.pagosForm.controls['fechaRegistro'].setValue(
-        new Date(this.pagosForm.controls['fechaRegistro'].value)
+        new Date(this.pagosForm.controls['fechaRegistro'].value),
       );
     }
     if (this.pagosForm.controls['fechaEntrega'].value !== '') {
       this.pagosForm.controls['fechaEntrega'].setValue(
-        new Date(this.pagosForm.controls['fechaEntrega'].value)
+        new Date(this.pagosForm.controls['fechaEntrega'].value),
       );
     }
 
@@ -534,61 +611,287 @@ export class NuevoTrabajoComponent {
   }
 
   async guardarRegistro() {
-    this.alertService.loanding('Registrando nuevo pago.');
-    const id = await this.db.getId();
-    this.pagosForm.controls['id'].setValue(id);
-    const datos: Pago = this.pagosForm.getRawValue();
-    const semanaEncontrada = this.semanasFilter.find(
-      (semana: any) => semana.toLowerCase() === datos.semana.toLowerCase()
-    );
-    await this.db.createDoc(
-      {
-        ...this.pagosForm.getRawValue(),
-        createAt: new Date(),
-        trabajoAnterior: this.selectedItem,
-        idTrabajoAnterior: this.selectedItem ? this.selectedItem.id : '',
-        semana: semanaEncontrada ? semanaEncontrada : datos.semana,
-        urgente: datos.urgente === '' ? 'NO' : datos.urgente,
-        placaBase: datos.placaBase === '' ? 'NO' : datos.placaBase,
-        pagado: datos.pagado === '' ? 'NO' : datos.pagado,
-      },
-      'pagos',
-      id
-    );
-    this.cambiarValorSemana(datos, 'Nuevo trabajo guardado correctamente');
-  }
+    try {
+      // ============================================================
+      // 1. Mostrar cargando
+      // ============================================================
 
-  async editarRegistro() {
-    const opt = await this.alertService.alertConfirm('¿Estás seguro de editar la información?');
-    if (opt.isConfirmed) {
-      const datos = this.pagosForm.getRawValue();
+      this.alertService.loanding('Registrando nuevo pago.');
+
+      // ============================================================
+      // 2. Obtener ID del nuevo trabajo
+      // ============================================================
+
+      const id = await this.db.getId();
+      this.pagosForm.controls['id'].setValue(id);
+
+      // ============================================================
+      // 3. Obtener datos del formulario
+      // ============================================================
+
+      const datos: Pago = this.pagosForm.getRawValue();
       const semanaEncontrada = this.semanasFilter.find(
-        (semana: any) => semana.toLowerCase() === datos.semana.toLowerCase()
+        (semana: any) => semana.toLowerCase() === datos.semana.toLowerCase(),
       );
-      this.alertService.loanding('Modificando datos del registro de pago.');
-      await this.db.updateDoc(
+
+      // ============================================================
+      // 4. SUBIR FOTOS DE REVISIÓN
+      // ============================================================
+
+      let fotosRevision: any[] = [];
+
+      if (this.fotoRevision.length > 0) {
+        this.subiendoRevision = true;
+
+        fotosRevision = await this.googleDriveService.subirImagenes(
+          id,
+          'revision',
+          this.fotoRevision,
+        );
+
+        this.subiendoRevision = false;
+      }
+
+      // ============================================================
+      // 5. SUBIR FOTOS DE ENTREGA
+      // ============================================================
+
+      let fotosEntrega: any[] = [];
+
+      if (this.fotoEntrega.length > 0) {
+        this.subiendoEntrega = true;
+
+        fotosEntrega = await this.googleDriveService.subirImagenes(
+          id,
+          'entrega',
+          this.fotoEntrega,
+        );
+
+        this.subiendoEntrega = false;
+      }
+
+      // ============================================================
+      // 6. Preparar información de fotografías
+      // ============================================================
+
+      const fotografias = {
+        revision: fotosRevision.map((foto: any) => ({
+          fileId: foto.fileId,
+          fileName: foto.fileName,
+          mimeType: foto.mimeType,
+          size: foto.size,
+          url: foto.url,
+          viewUrl: foto.viewUrl,
+        })),
+
+        entrega: fotosEntrega.map((foto: any) => ({
+          fileId: foto.fileId,
+          fileName: foto.fileName,
+          mimeType: foto.mimeType,
+          size: foto.size,
+          url: foto.url,
+          viewUrl: foto.viewUrl,
+        })),
+      };
+
+      // ============================================================
+      // 7. Guardar trabajo en Firestore
+      // ============================================================
+
+      await this.db.createDoc(
         {
-          ...datos,
+          ...this.pagosForm.getRawValue(),
+          createAt: new Date(),
           trabajoAnterior: this.selectedItem,
           idTrabajoAnterior: this.selectedItem ? this.selectedItem.id : '',
           semana: semanaEncontrada ? semanaEncontrada : datos.semana,
           urgente: datos.urgente === '' ? 'NO' : datos.urgente,
           placaBase: datos.placaBase === '' ? 'NO' : datos.placaBase,
           pagado: datos.pagado === '' ? 'NO' : datos.pagado,
+          fotografias,
         },
         'pagos',
-        datos.id
+        id,
       );
-      this.cambiarValorSemana(datos, 'Datos del trabajo modificados correctamente');
+
+      // ============================================================
+      // 8. Continuar proceso normal
+      // ============================================================
+
+      this.cambiarValorSemana(datos, 'Nuevo trabajo guardado correctamente');
+    } catch (error) {
+      // ============================================================
+      // 9. Restaurar estados
+      // ============================================================
+
+      this.subiendoRevision = false;
+      this.subiendoEntrega = false;
+
+      console.error('Error al guardar trabajo:', error);
+
+      this.alertService.alertClose();
+
+      this.alertService.toast(
+        'No fue posible guardar el trabajo o subir las fotografías.',
+        'snackbar-error',
+      );
+    }
+  }
+
+  async editarRegistro() {
+    const opt = await this.alertService.alertConfirm(
+      '¿Estás seguro de editar la información?',
+    );
+
+    if (!opt.isConfirmed) {
+      return;
+    }
+
+    try {
+      this.alertService.loanding('Modificando datos del registro de pago.');
+
+      const datos = this.pagosForm.getRawValue();
+
+      const semanaEncontrada = this.semanasFilter.find(
+        (semana: any) => semana.toLowerCase() === datos.semana.toLowerCase(),
+      );
+
+      // ============================================================
+      // 1. FOTOS EXISTENTES
+      // ============================================================
+
+      let fotosRevision = [...this.fotosGuardadasRevision];
+      let fotosEntrega = [...this.fotosGuardadasEntrega];
+
+      // ============================================================
+      // 2. SUBIR NUEVAS FOTOS DE REVISIÓN
+      // ============================================================
+
+      if (this.fotoRevision.length > 0) {
+        this.subiendoRevision = true;
+
+        const nuevasFotosRevision = await this.googleDriveService.subirImagenes(
+          datos.id,
+          'revision',
+          this.fotoRevision,
+        );
+
+        fotosRevision = [...fotosRevision, ...nuevasFotosRevision];
+
+        this.subiendoRevision = false;
+      }
+
+      // ============================================================
+      // 3. SUBIR NUEVAS FOTOS DE ENTREGA
+      // ============================================================
+
+      if (this.fotoEntrega.length > 0) {
+        this.subiendoEntrega = true;
+
+        const nuevasFotosEntrega = await this.googleDriveService.subirImagenes(
+          datos.id,
+          'entrega',
+          this.fotoEntrega,
+        );
+
+        fotosEntrega = [...fotosEntrega, ...nuevasFotosEntrega];
+
+        this.subiendoEntrega = false;
+      }
+
+      // ============================================================
+      // 4. PREPARAR FOTOGRAFÍAS
+      // ============================================================
+
+      const fotografias = {
+        revision: fotosRevision.map((foto: any) => ({
+          fileId: foto.fileId,
+          fileName: foto.fileName,
+          mimeType: foto.mimeType,
+          size: foto.size,
+          url: foto.url,
+          viewUrl: foto.viewUrl ?? '',
+        })),
+
+        entrega: fotosEntrega.map((foto: any) => ({
+          fileId: foto.fileId,
+          fileName: foto.fileName,
+          mimeType: foto.mimeType,
+          size: foto.size,
+          url: foto.url,
+          viewUrl: foto.viewUrl ?? '',
+        })),
+      };
+
+      // ============================================================
+      // 5. ACTUALIZAR FIRESTORE
+      // ============================================================
+
+      await this.db.updateDoc(
+        {
+          ...datos,
+
+          trabajoAnterior: this.selectedItem,
+
+          idTrabajoAnterior: this.selectedItem ? this.selectedItem.id : '',
+
+          semana: semanaEncontrada ? semanaEncontrada : datos.semana,
+
+          urgente: datos.urgente === '' ? 'NO' : datos.urgente,
+
+          placaBase: datos.placaBase === '' ? 'NO' : datos.placaBase,
+
+          pagado: datos.pagado === '' ? 'NO' : datos.pagado,
+
+          fotografias,
+        },
+        'pagos',
+        datos.id,
+      );
+
+      // ============================================================
+      // 6. CONTINUAR PROCESO NORMAL
+      // ============================================================
+
+      this.cambiarValorSemana(
+        datos,
+        'Datos del trabajo modificados correctamente',
+      );
+    } catch (error) {
+      console.log(error);
+
+      this.subiendoRevision = false;
+      this.subiendoEntrega = false;
+
+      console.error('Error al editar trabajo o subir fotografías:', error);
+
+      this.alertService.alertClose();
+
+      this.alertService.toast(
+        'No fue posible modificar el trabajo o subir las fotografías.',
+        'snackbar-error',
+      );
     }
   }
 
   async cambiarValorSemana(datos: any, msg: string) {
     if (this.selectedItem) {
-      await this.db.updateDoc({ trabajoReferencia: datos, idReferencia: datos.id, pagado: 'SI' }, 'pagos', this.selectedItem.id);
+      await this.db.updateDoc(
+        { trabajoReferencia: datos, idReferencia: datos.id, pagado: 'SI' },
+        'pagos',
+        this.selectedItem.id,
+      );
     }
-    if (this.selectedItem && this.selectedItemOriginal && this.selectedItemOriginal.id !== this.selectedItem.id) {
-      await this.db.updateDoc({ trabajoReferencia: null, idReferencia: '', pagado: '' }, 'pagos', this.selectedItemOriginal.id);
+    if (
+      this.selectedItem &&
+      this.selectedItemOriginal &&
+      this.selectedItemOriginal.id !== this.selectedItem.id
+    ) {
+      await this.db.updateDoc(
+        { trabajoReferencia: null, idReferencia: '', pagado: '' },
+        'pagos',
+        this.selectedItemOriginal.id,
+      );
     }
     this.validarNuevos(msg, datos);
   }
@@ -596,20 +899,25 @@ export class NuevoTrabajoComponent {
   async validarNuevos(msj: string, datos: any) {
     if (
       !this.semanasFilter.some(
-        (semana: any) => semana.toLowerCase() === datos.semana.toLowerCase()
+        (semana: any) => semana.toLowerCase() === datos.semana.toLowerCase(),
       ) &&
       datos.semana !== ''
     ) {
       const id = this.db.getId();
       await this.db.createDoc(
-        { nombre: datos.semana, create_at: new Date(), years: this.anioActual, id },
+        {
+          nombre: datos.semana,
+          create_at: new Date(),
+          years: this.anioActual,
+          id,
+        },
         'semanas',
-        id
+        id,
       );
     }
     if (
       !this.trabajosFilter.some(
-        (trabajo: any) => trabajo.toLowerCase() === datos.trabajo.toLowerCase()
+        (trabajo: any) => trabajo.toLowerCase() === datos.trabajo.toLowerCase(),
       ) &&
       datos.trabajo !== ''
     ) {
@@ -617,12 +925,12 @@ export class NuevoTrabajoComponent {
       await this.db.createDoc(
         { nombre: datos.trabajo, create_at: new Date(), id },
         'trabajos',
-        id
+        id,
       );
     }
     if (
       !this.tonosFilter.some(
-        (tono: any) => tono.toLowerCase() === datos.tono.toLowerCase()
+        (tono: any) => tono.toLowerCase() === datos.tono.toLowerCase(),
       ) &&
       datos.tono !== ''
     ) {
@@ -630,13 +938,13 @@ export class NuevoTrabajoComponent {
       await this.db.createDoc(
         { nombre: datos.tono, create_at: new Date(), id },
         'tonos',
-        id
+        id,
       );
     }
     if (
       !this.consultoriosFilter.some(
         (consultorio: any) =>
-          consultorio.toLowerCase() === datos.consultorio.toLowerCase()
+          consultorio.toLowerCase() === datos.consultorio.toLowerCase(),
       ) &&
       datos.consultorio !== ''
     ) {
@@ -644,13 +952,14 @@ export class NuevoTrabajoComponent {
       await this.db.createDoc(
         { nombre: datos.consultorio, create_at: new Date(), id },
         'consultorios',
-        id
+        id,
       );
     }
+
     if (
       !this.materialesFilter.some(
         (material: any) =>
-          material.toLowerCase() === datos.material.toLowerCase()
+          material.toLowerCase() === datos.material.toLowerCase(),
       ) &&
       datos.material !== ''
     ) {
@@ -658,7 +967,7 @@ export class NuevoTrabajoComponent {
       await this.db.createDoc(
         { nombre: datos.material, create_at: new Date(), id },
         'materiales',
-        id
+        id,
       );
     }
     this.alertService.alertClose();
@@ -674,7 +983,7 @@ export class NuevoTrabajoComponent {
   _filterProvSemanas(value: string) {
     this.semanasFilter = [...this.semanas]
       .filter((option) =>
-        option.toString().toLowerCase().includes(value.toLowerCase())
+        option.toString().toLowerCase().includes(value.toLowerCase()),
       )
       .map((value) => value);
   }
@@ -682,7 +991,7 @@ export class NuevoTrabajoComponent {
   _filterProvTrabajos(value: string) {
     this.trabajosFilter = [...this.trabajos]
       .filter((option) =>
-        option.toString().toLowerCase().includes(value.toLowerCase())
+        option.toString().toLowerCase().includes(value.toLowerCase()),
       )
       .map((value) => value);
   }
@@ -690,7 +999,7 @@ export class NuevoTrabajoComponent {
   _filterProvTonos(value: string) {
     this.tonosFilter = [...this.tonos]
       .filter((option) =>
-        option.toString().toLowerCase().includes(value.toLowerCase())
+        option.toString().toLowerCase().includes(value.toLowerCase()),
       )
       .map((value) => value);
   }
@@ -698,7 +1007,7 @@ export class NuevoTrabajoComponent {
   _filterProvConsultorios(value: string) {
     this.consultoriosFilter = [...this.consultorios]
       .filter((option) =>
-        option.toString().toLowerCase().includes(value.toLowerCase())
+        option.toString().toLowerCase().includes(value.toLowerCase()),
       )
       .map((value) => value);
   }
@@ -706,7 +1015,7 @@ export class NuevoTrabajoComponent {
   _filterProvMateriales(value: string) {
     this.materialesFilter = [...this.materiales]
       .filter((option) =>
-        option.toString().toLowerCase().includes(value.toLowerCase())
+        option.toString().toLowerCase().includes(value.toLowerCase()),
       )
       .map((value) => value);
   }
@@ -723,17 +1032,18 @@ export class NuevoTrabajoComponent {
         item.consultorio.toLowerCase().includes(searchText) ||
         item.noContrato.toLowerCase().includes(searchText) ||
         item.trabajo.toLowerCase().includes(searchText) ||
-        item.material.toLowerCase().includes(searchText)
+        item.material.toLowerCase().includes(searchText),
     );
   }
 
   async onItemSelected(item: any) {
-    const mensaje = this.selectedItem ?
-      '¿Estás seguro de seleccionar este trabajo? Se reemplazará por el que habías seleccionado anteriormente.' :
-      '¿Deseas seleccionar este trabajo?';
+    const mensaje = this.selectedItem
+      ? '¿Estás seguro de seleccionar este trabajo? Se reemplazará por el que habías seleccionado anteriormente.'
+      : '¿Deseas seleccionar este trabajo?';
     const opt = await this.alertService.alertConfirm(mensaje);
     if (opt.isConfirmed) {
       this.selectedItem = item;
+      this.imagenesSeleccionadaExpandida = false;
       this.mostrarModal = false;
       this.pagosForm.patchValue({
         noContrato: this.selectedItem.noContrato || '',
@@ -745,6 +1055,10 @@ export class NuevoTrabajoComponent {
         placaBase: this.selectedItem.placaBase || 'NO',
         precio: this.selectedItem.precio || 0,
         observaciones: this.selectedItem.observaciones || '',
+        fotografias: (this.selectedItem.fotografias ??= {
+          revision: [],
+          entrega: [],
+        }),
       });
       setTimeout(() => {
         document.querySelector('.selected-info')?.scrollIntoView({
@@ -755,5 +1069,604 @@ export class NuevoTrabajoComponent {
     } else {
       this.selectedItem = null;
     }
+  }
+
+  // ============================================================
+  // SELECCIONAR FOTO DE REVISIÓN
+  // ============================================================
+
+  seleccionarFotoRevision(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    if (!input.files || input.files.length === 0) {
+      return;
+    }
+
+    const archivos = Array.from(input.files);
+
+    this.agregarFotos(archivos, 'revision');
+
+    // Permite volver a seleccionar las mismas imágenes
+    input.value = '';
+  }
+
+  // ============================================================
+  // SELECCIONAR FOTO DE ENTREGA
+  // ============================================================
+
+  seleccionarFotoEntrega(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    if (!input.files || input.files.length === 0) {
+      return;
+    }
+
+    const archivos = Array.from(input.files);
+
+    this.agregarFotos(archivos, 'entrega');
+
+    // Permite volver a seleccionar las mismas imágenes
+    input.value = '';
+  }
+
+  // ============================================================
+  // AGREGAR FOTOS
+  // ============================================================
+
+  private agregarFotos(archivos: File[], tipo: 'revision' | 'entrega'): void {
+    const fotosActuales =
+      tipo === 'revision' ? this.fotoRevision : this.fotoEntrega;
+
+    // Espacios disponibles
+    const espaciosDisponibles = this.MAX_FOTOS - fotosActuales.length;
+
+    if (espaciosDisponibles <= 0) {
+      this.alertService.toast(
+        `Ya tienes el máximo de ${this.MAX_FOTOS} fotos de ${tipo}.`,
+        'snackbar-error',
+      );
+
+      return;
+    }
+
+    // Solo tomar las que caben
+    const archivosAAgregar = archivos.slice(0, espaciosDisponibles);
+
+    // Validar y agregar
+    for (const archivo of archivosAAgregar) {
+      if (!this.validarImagen(archivo)) {
+        continue;
+      }
+
+      fotosActuales.push(archivo);
+
+      this.generarPreview(archivo, tipo);
+    }
+
+    // Avisar si seleccionaron más de las permitidas
+    if (archivos.length > espaciosDisponibles) {
+      this.alertService.toast(
+        `Solo puedes tener ${this.MAX_FOTOS} fotos de ${tipo}.`,
+        'snackbar-error',
+      );
+    }
+  }
+
+  // ============================================================
+  // VALIDAR IMAGEN
+  // ============================================================
+
+  private validarImagen(archivo: File): boolean {
+    if (!this.TIPOS_FOTO_PERMITIDOS.includes(archivo.type)) {
+      this.alertService.toast(
+        `La imagen "${archivo.name}" no tiene un formato permitido.`,
+        'snackbar-error',
+      );
+
+      return false;
+    }
+
+    if (archivo.size > this.MAX_TAMANO_FOTO) {
+      this.alertService.toast(
+        `La imagen "${archivo.name}" supera los 15 MB.`,
+        'snackbar-error',
+      );
+
+      return false;
+    }
+
+    return true;
+  }
+
+  // ============================================================
+  // GENERAR PREVISUALIZACIÓN
+  // ============================================================
+
+  private generarPreview(archivo: File, tipo: 'revision' | 'entrega'): void {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const resultado = reader.result;
+
+      if (typeof resultado !== 'string') {
+        return;
+      }
+
+      if (tipo === 'revision') {
+        this.previewRevision.push(resultado);
+      } else {
+        this.previewEntrega.push(resultado);
+      }
+    };
+
+    reader.readAsDataURL(archivo);
+  }
+
+  // ============================================================
+  // QUITAR FOTO DE REVISIÓN
+  // ============================================================
+
+  quitarFotoRevision(index: number): void {
+    this.fotoRevision.splice(index, 1);
+
+    this.previewRevision.splice(index, 1);
+  }
+
+  // ============================================================
+  // QUITAR FOTO DE ENTREGA
+  // ============================================================
+
+  quitarFotoEntrega(index: number): void {
+    this.fotoEntrega.splice(index, 1);
+
+    this.previewEntrega.splice(index, 1);
+  }
+
+  getFotoViewUrl(foto: any): string {
+    if (!foto) {
+      return '';
+    }
+
+    if (foto.fileId) {
+      return `https://drive.google.com/thumbnail?id=${foto.fileId}&sz=w1200`;
+    }
+
+    return '';
+  }
+
+  abrirFotoViewer(fotos: any[], indice: number): void {
+    if (!fotos || fotos.length === 0) {
+      return;
+    }
+
+    this.fotosViewer = fotos;
+    this.indiceFotoViewer = indice;
+    this.fotoViewerAbierto = true;
+
+    this.reiniciarPosicionFoto();
+  }
+
+  cerrarFotoViewer(): void {
+    this.fotoViewerAbierto = false;
+    this.fotosViewer = [];
+    this.indiceFotoViewer = 0;
+    this.reiniciarPosicionFoto();
+  }
+
+  fotoAnterior(): void {
+    if (this.fotosViewer.length === 0) {
+      return;
+    }
+
+    this.indiceFotoViewer =
+      this.indiceFotoViewer === 0
+        ? this.fotosViewer.length - 1
+        : this.indiceFotoViewer - 1;
+
+    this.reiniciarPosicionFoto();
+  }
+
+  fotoSiguiente(): void {
+    if (this.fotosViewer.length === 0) {
+      return;
+    }
+
+    this.indiceFotoViewer =
+      this.indiceFotoViewer === this.fotosViewer.length - 1
+        ? 0
+        : this.indiceFotoViewer + 1;
+
+    this.reiniciarPosicionFoto();
+  }
+
+  getFotoViewerUrl(): string {
+    const foto = this.fotosViewer[this.indiceFotoViewer];
+
+    if (!foto) {
+      return '';
+    }
+
+    return this.getFotoViewUrl(foto);
+  }
+
+  reiniciarPosicionFoto(): void {
+    this.zoomFotoViewer = 1;
+    this.posicionXFotoViewer = 0;
+    this.posicionYFotoViewer = 0;
+  }
+
+  zoomConRueda(event: WheelEvent): void {
+    event.preventDefault();
+
+    const contenedor = event.currentTarget as HTMLElement;
+
+    const rect = contenedor.getBoundingClientRect();
+
+    // Posición del cursor dentro del visor
+    const cursorX = event.clientX - rect.left - rect.width / 2;
+
+    const cursorY = event.clientY - rect.top - rect.height / 2;
+
+    const zoomAnterior = this.zoomFotoViewer;
+
+    const incremento = event.deltaY < 0 ? 0.2 : -0.2;
+
+    const nuevoZoom = Math.min(8, Math.max(1, zoomAnterior + incremento));
+
+    if (nuevoZoom === zoomAnterior) {
+      return;
+    }
+
+    // Mantener el punto bajo el cursor
+    const factor = nuevoZoom / zoomAnterior;
+
+    this.posicionXFotoViewer =
+      cursorX - (cursorX - this.posicionXFotoViewer) * factor;
+
+    this.posicionYFotoViewer =
+      cursorY - (cursorY - this.posicionYFotoViewer) * factor;
+
+    this.zoomFotoViewer = nuevoZoom;
+
+    if (this.zoomFotoViewer === 1) {
+      this.posicionXFotoViewer = 0;
+      this.posicionYFotoViewer = 0;
+    } else {
+      this.limitarPosicionFoto();
+    }
+  }
+
+  iniciarArrastre(event: MouseEvent): void {
+    if (this.zoomFotoViewer <= 1) {
+      return;
+    }
+
+    this.arrastrandoFotoViewer = true;
+    this.inicioArrastreX = event.clientX - this.posicionXFotoViewer;
+    this.inicioArrastreY = event.clientY - this.posicionYFotoViewer;
+  }
+
+  moverFoto(event: MouseEvent): void {
+    if (!this.arrastrandoFotoViewer) {
+      return;
+    }
+
+    this.posicionXFotoViewer = event.clientX - this.inicioArrastreX;
+
+    this.posicionYFotoViewer = event.clientY - this.inicioArrastreY;
+
+    this.limitarPosicionFoto();
+  }
+
+  terminarArrastre(): void {
+    this.arrastrandoFotoViewer = false;
+  }
+
+  acercarFoto(): void {
+    this.zoomFotoViewer = Math.min(this.zoomFotoViewer + 0.25, 3);
+  }
+
+  alejarFoto(): void {
+    this.zoomFotoViewer = Math.max(this.zoomFotoViewer - 0.25, 1);
+  }
+
+  restablecerZoom(): void {
+    this.zoomFotoViewer = 1;
+  }
+
+  obtenerDistanciaEntreDedos(touches: TouchList): number {
+    const dedo1 = touches[0];
+    const dedo2 = touches[1];
+
+    const dx = dedo2.clientX - dedo1.clientX;
+    const dy = dedo2.clientY - dedo1.clientY;
+
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  iniciarPinch(event: TouchEvent): void {
+    if (event.touches.length !== 2) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const contenedor = event.currentTarget as HTMLElement;
+
+    const rect = contenedor.getBoundingClientRect();
+
+    const dedo1 = event.touches[0];
+    const dedo2 = event.touches[1];
+
+    this.puntoPinchX =
+      (dedo1.clientX + dedo2.clientX) / 2 - rect.left - rect.width / 2;
+
+    this.puntoPinchY =
+      (dedo1.clientY + dedo2.clientY) / 2 - rect.top - rect.height / 2;
+
+    this.dedosIniciales = this.obtenerDistanciaEntreDedos(event.touches);
+
+    this.zoomInicialPinch = this.zoomFotoViewer;
+  }
+
+  moverPinch(event: TouchEvent): void {
+    if (event.touches.length !== 2 || this.dedosIniciales === 0) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const contenedor = event.currentTarget as HTMLElement;
+
+    const rect = contenedor.getBoundingClientRect();
+
+    const dedo1 = event.touches[0];
+    const dedo2 = event.touches[1];
+
+    // Punto medio entre los dos dedos
+    const puntoX =
+      (dedo1.clientX + dedo2.clientX) / 2 - rect.left - rect.width / 2;
+
+    const puntoY =
+      (dedo1.clientY + dedo2.clientY) / 2 - rect.top - rect.height / 2;
+
+    const distanciaActual = this.obtenerDistanciaEntreDedos(event.touches);
+
+    const factor = distanciaActual / this.dedosIniciales;
+
+    const zoomAnterior = this.zoomFotoViewer;
+
+    const nuevoZoom = Math.min(8, Math.max(1, this.zoomInicialPinch * factor));
+
+    if (nuevoZoom === zoomAnterior) {
+      return;
+    }
+
+    const factorZoom = nuevoZoom / zoomAnterior;
+
+    // Mantener el punto entre los dedos
+    this.posicionXFotoViewer =
+      puntoX - (puntoX - this.posicionXFotoViewer) * factorZoom;
+
+    this.posicionYFotoViewer =
+      puntoY - (puntoY - this.posicionYFotoViewer) * factorZoom;
+
+    this.zoomFotoViewer = nuevoZoom;
+
+    if (this.zoomFotoViewer === 1) {
+      this.posicionXFotoViewer = 0;
+      this.posicionYFotoViewer = 0;
+    } else {
+      this.limitarPosicionFoto();
+    }
+  }
+
+  terminarPinch(): void {
+    this.dedosIniciales = 0;
+  }
+
+  limitarPosicionFoto(): void {
+    if (this.zoomFotoViewer <= 1) {
+      this.posicionXFotoViewer = 0;
+      this.posicionYFotoViewer = 0;
+      return;
+    }
+
+    const contenedor = document.querySelector(
+      '.photo-viewer-image-container',
+    ) as HTMLElement | null;
+
+    const imagen = document.querySelector(
+      '.photo-viewer-image',
+    ) as HTMLImageElement | null;
+
+    if (!contenedor || !imagen) {
+      return;
+    }
+
+    const anchoContenedor = contenedor.clientWidth;
+    const altoContenedor = contenedor.clientHeight;
+
+    const anchoImagen = imagen.clientWidth;
+    const altoImagen = imagen.clientHeight;
+
+    const anchoZoom = anchoImagen * this.zoomFotoViewer;
+
+    const altoZoom = altoImagen * this.zoomFotoViewer;
+
+    const limiteX = Math.max(0, (anchoZoom - anchoContenedor) / 2);
+
+    const limiteY = Math.max(0, (altoZoom - altoContenedor) / 2);
+
+    this.posicionXFotoViewer = Math.max(
+      -limiteX,
+      Math.min(limiteX, this.posicionXFotoViewer),
+    );
+
+    this.posicionYFotoViewer = Math.max(
+      -limiteY,
+      Math.min(limiteY, this.posicionYFotoViewer),
+    );
+  }
+
+  imagenViewerCargada(): void {
+    setTimeout(() => {
+      this.limitarPosicionFoto();
+    });
+  }
+
+  iniciarArrastreTouch(event: TouchEvent): void {
+    if (event.touches.length !== 1 || this.zoomFotoViewer <= 1) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const touch = event.touches[0];
+
+    this.arrastrandoTouch = true;
+
+    this.inicioTouchX = touch.clientX - this.posicionXFotoViewer;
+
+    this.inicioTouchY = touch.clientY - this.posicionYFotoViewer;
+  }
+
+  moverArrastreTouch(event: TouchEvent): void {
+    if (!this.arrastrandoTouch || event.touches.length !== 1) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const touch = event.touches[0];
+
+    this.posicionXFotoViewer = touch.clientX - this.inicioTouchX;
+
+    this.posicionYFotoViewer = touch.clientY - this.inicioTouchY;
+
+    this.limitarPosicionFoto();
+  }
+
+  terminarArrastreTouch(): void {
+    this.arrastrandoTouch = false;
+  }
+
+  ajustarViewerAlCambiarPantalla(): void {
+    if (!this.fotoViewerAbierto) {
+      return;
+    }
+
+    setTimeout(() => {
+      this.limitarPosicionFoto();
+    });
+  }
+
+  async eliminarFotoGuardada(
+    foto: any,
+    tipo: 'revision' | 'entrega',
+    index: number,
+  ): Promise<void> {
+    if (!foto?.fileId) {
+      this.alertService.toast(
+        'No se encontró el ID de la fotografía.',
+        'snackbar-error',
+      );
+      return;
+    }
+
+    const opt = await this.alertService.alertConfirm(
+      '¿Estás seguro de eliminar esta fotografía?',
+    );
+
+    if (!opt.isConfirmed) {
+      return;
+    }
+
+    try {
+      this.alertService.loanding('Eliminando fotografía...');
+
+      // ============================================================
+      // 1. ELIMINAR DE GOOGLE DRIVE
+      // ============================================================
+
+      console.log('ELIMINANDO DE DRIVE:', foto.fileId);
+
+      const respuestaDrive = await this.googleDriveService.eliminarImagen(
+        foto.fileId,
+      );
+
+      console.log('DRIVE ELIMINÓ CORRECTAMENTE:', respuestaDrive);
+
+      // ============================================================
+      // 2. ELIMINAR DEL ARREGLO LOCAL
+      // ============================================================
+
+      if (tipo === 'revision') {
+        this.fotosGuardadasRevision = this.fotosGuardadasRevision.filter(
+          (_, i) => i !== index,
+        );
+      } else {
+        this.fotosGuardadasEntrega = this.fotosGuardadasEntrega.filter(
+          (_, i) => i !== index,
+        );
+      }
+
+      // ============================================================
+      // 3. ACTUALIZAR FIRESTORE
+      // ============================================================
+
+      console.log('ACTUALIZANDO FOTOS EN FIRESTORE...');
+
+      await this.db.updateDoc(
+        {
+          fotografias: {
+            revision: this.fotosGuardadasRevision,
+            entrega: this.fotosGuardadasEntrega,
+          },
+        },
+        'pagos',
+        this.pago.id,
+      );
+
+      console.log('FIRESTORE ACTUALIZADO CORRECTAMENTE.');
+
+      // ============================================================
+      // 4. CERRAR LOADING
+      // ============================================================
+
+      this.alertService.alertClose();
+
+      this.alertService.toast(
+        'Fotografía eliminada correctamente.',
+        'snackbar-success',
+      );
+    } catch (error) {
+      console.error('ERROR AL ELIMINAR FOTOGRAFÍA:', error);
+
+      this.alertService.alertClose();
+
+      this.alertService.toast(
+        'No fue posible completar la eliminación.',
+        'snackbar-error',
+      );
+    }
+  }
+
+  abrirModalImagenes(trabajo: any): void {
+    this.trabajoImagenesSeleccionado = trabajo;
+    this.modalImagenesAbierto = true;
+  }
+
+  cerrarModalImagenes(): void {
+    this.modalImagenesAbierto = false;
+    this.trabajoImagenesSeleccionado = null;
+  }
+
+  toggleImagenes(): void {
+    this.imagenesExpandida = !this.imagenesExpandida;
+  }
+
+  toggleImagenesSeleccionada(): void {
+    this.imagenesSeleccionadaExpandida = !this.imagenesSeleccionadaExpandida;
   }
 }

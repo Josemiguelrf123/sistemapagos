@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { NgClass, CommonModule, DatePipe } from '@angular/common';
 import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +25,7 @@ import { MatInputModule } from '@angular/material/input';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { FeatherIconsComponent } from '@shared/components/feather-icons/feather-icons.component';
+import { FotosTrabajoComponent } from '@shared/components/fotos-trabajo/fotos-trabajo.component';
 
 declare module 'jspdf' {
   interface jsPDF {
@@ -55,7 +56,8 @@ declare module 'jspdf' {
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    FeatherIconsComponent
+     FeatherIconsComponent,
+     FotosTrabajoComponent
   ],
 })
 export class ListadoSemanasComponent {
@@ -85,6 +87,7 @@ export class ListadoSemanasComponent {
     'total',
     'totalcobrar',
     'observaciones',
+    'imagenes',
     'actions'
   ];
   displayedColumns = [
@@ -102,6 +105,7 @@ export class ListadoSemanasComponent {
     'total',
     'totalcobrar',
     'observaciones',
+    'imagenes',
     'actions'
   ];
   semanas: any = [];
@@ -109,6 +113,25 @@ export class ListadoSemanasComponent {
   mostrarModal = false;
   selectedItem!: Pago;
   selectedItem1!: Pago;
+  modalImagenesAbierto = false;
+  trabajoImagenesSeleccionado: any = null;
+  fotoViewerAbierto = false;
+  fotosViewer: any[] = [];
+  indiceFotoViewer = 0;
+  zoomFotoViewer = 1;
+  posicionXFotoViewer = 0;
+  posicionYFotoViewer = 0;
+  arrastrandoFotoViewer = false;
+  inicioArrastreX = 0;
+  inicioArrastreY = 0;
+  distanciaInicialPinch = 0;
+  zoomInicialPinch = 1;
+  dedosIniciales = 0;
+  puntoPinchX = 0;
+  puntoPinchY = 0;
+  arrastrandoTouch = false;
+  inicioTouchX = 0;
+  inicioTouchY = 0;
   totalGeneral = 0;
   totalPartida1 = 0;
   totalPartida2 = 0;
@@ -417,6 +440,247 @@ export class ListadoSemanasComponent {
     this.mostrarModal = true;
     this.selectedItem = item;
     this.selectedItem1 = item1;
+  }
+
+  tieneFotografias(fotografias: any): boolean {
+    return Boolean(
+      fotografias?.revision?.length || fotografias?.entrega?.length,
+    );
+  }
+
+  abrirModalImagenes(trabajo: any): void {
+    if (!trabajo?.fotografias?.revision?.length && !trabajo?.fotografias?.entrega?.length) {
+      return;
+    }
+
+    this.trabajoImagenesSeleccionado = trabajo;
+    this.modalImagenesAbierto = true;
+  }
+
+  cerrarModalImagenes(): void {
+    this.modalImagenesAbierto = false;
+    this.trabajoImagenesSeleccionado = null;
+  }
+
+  getFotoViewUrl(foto: any): string {
+    return foto?.fileId
+      ? `https://drive.google.com/thumbnail?id=${foto.fileId}&sz=w1200`
+      : '';
+  }
+
+  abrirFotoViewer(fotos: any[], indice: number): void {
+    if (!fotos?.length) {
+      return;
+    }
+
+    this.fotosViewer = fotos;
+    this.indiceFotoViewer = indice;
+    this.fotoViewerAbierto = true;
+    this.reiniciarPosicionFoto();
+  }
+
+  cerrarFotoViewer(): void {
+    this.fotoViewerAbierto = false;
+    this.fotosViewer = [];
+    this.indiceFotoViewer = 0;
+    this.reiniciarPosicionFoto();
+  }
+
+  fotoAnterior(): void {
+    if (this.fotosViewer.length === 0) {
+      return;
+    }
+
+    this.indiceFotoViewer = this.indiceFotoViewer === 0
+      ? this.fotosViewer.length - 1
+      : this.indiceFotoViewer - 1;
+    this.reiniciarPosicionFoto();
+  }
+
+  fotoSiguiente(): void {
+    if (this.fotosViewer.length === 0) {
+      return;
+    }
+
+    this.indiceFotoViewer = this.indiceFotoViewer === this.fotosViewer.length - 1
+      ? 0
+      : this.indiceFotoViewer + 1;
+    this.reiniciarPosicionFoto();
+  }
+
+  acercarFoto(): void {
+    this.zoomFotoViewer = Math.min(3, this.zoomFotoViewer + 0.25);
+  }
+
+  alejarFoto(): void {
+    this.zoomFotoViewer = Math.max(1, this.zoomFotoViewer - 0.25);
+  }
+
+  restablecerZoom(): void {
+    this.reiniciarPosicionFoto();
+  }
+
+  reiniciarPosicionFoto(): void {
+    this.zoomFotoViewer = 1;
+    this.posicionXFotoViewer = 0;
+    this.posicionYFotoViewer = 0;
+  }
+
+  getFotoViewerUrl(): string {
+    return this.getFotoViewUrl(this.fotosViewer[this.indiceFotoViewer]);
+  }
+
+  zoomConRueda(event: WheelEvent): void {
+    event.preventDefault();
+    const contenedor = event.currentTarget as HTMLElement;
+    const rect = contenedor.getBoundingClientRect();
+    const cursorX = event.clientX - rect.left - rect.width / 2;
+    const cursorY = event.clientY - rect.top - rect.height / 2;
+    const zoomAnterior = this.zoomFotoViewer;
+    const nuevoZoom = Math.min(8, Math.max(1, zoomAnterior + (event.deltaY < 0 ? 0.2 : -0.2)));
+
+    if (nuevoZoom === zoomAnterior) {
+      return;
+    }
+
+    const factor = nuevoZoom / zoomAnterior;
+    this.posicionXFotoViewer = cursorX - (cursorX - this.posicionXFotoViewer) * factor;
+    this.posicionYFotoViewer = cursorY - (cursorY - this.posicionYFotoViewer) * factor;
+    this.zoomFotoViewer = nuevoZoom;
+    this.limitarPosicionFoto();
+  }
+
+  iniciarArrastre(event: MouseEvent): void {
+    if (this.zoomFotoViewer <= 1) {
+      return;
+    }
+
+    this.arrastrandoFotoViewer = true;
+    this.inicioArrastreX = event.clientX - this.posicionXFotoViewer;
+    this.inicioArrastreY = event.clientY - this.posicionYFotoViewer;
+  }
+
+  moverFoto(event: MouseEvent): void {
+    if (!this.arrastrandoFotoViewer) {
+      return;
+    }
+
+    this.posicionXFotoViewer = event.clientX - this.inicioArrastreX;
+    this.posicionYFotoViewer = event.clientY - this.inicioArrastreY;
+    this.limitarPosicionFoto();
+  }
+
+  terminarArrastre(): void {
+    this.arrastrandoFotoViewer = false;
+  }
+
+  obtenerDistanciaEntreDedos(touches: TouchList): number {
+    const dedo1 = touches[0];
+    const dedo2 = touches[1];
+    const dx = dedo2.clientX - dedo1.clientX;
+    const dy = dedo2.clientY - dedo1.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  iniciarPinch(event: TouchEvent): void {
+    if (event.touches.length !== 2) {
+      return;
+    }
+
+    event.preventDefault();
+    const contenedor = event.currentTarget as HTMLElement;
+    const rect = contenedor.getBoundingClientRect();
+    const dedo1 = event.touches[0];
+    const dedo2 = event.touches[1];
+    this.puntoPinchX = (dedo1.clientX + dedo2.clientX) / 2 - rect.left - rect.width / 2;
+    this.puntoPinchY = (dedo1.clientY + dedo2.clientY) / 2 - rect.top - rect.height / 2;
+    this.dedosIniciales = this.obtenerDistanciaEntreDedos(event.touches);
+    this.zoomInicialPinch = this.zoomFotoViewer;
+  }
+
+  moverPinch(event: TouchEvent): void {
+    if (event.touches.length !== 2 || this.dedosIniciales === 0) {
+      return;
+    }
+
+    event.preventDefault();
+    const distanciaActual = this.obtenerDistanciaEntreDedos(event.touches);
+    const factor = distanciaActual / this.dedosIniciales;
+    const zoomAnterior = this.zoomFotoViewer;
+    const nuevoZoom = Math.min(8, Math.max(1, this.zoomInicialPinch * factor));
+
+    if (nuevoZoom === zoomAnterior) {
+      return;
+    }
+
+    const factorZoom = nuevoZoom / zoomAnterior;
+    this.posicionXFotoViewer = this.puntoPinchX - (this.puntoPinchX - this.posicionXFotoViewer) * factorZoom;
+    this.posicionYFotoViewer = this.puntoPinchY - (this.puntoPinchY - this.posicionYFotoViewer) * factorZoom;
+    this.zoomFotoViewer = nuevoZoom;
+    this.limitarPosicionFoto();
+  }
+
+  terminarPinch(): void {
+    this.dedosIniciales = 0;
+  }
+
+  iniciarArrastreTouch(event: TouchEvent): void {
+    if (event.touches.length !== 1 || this.zoomFotoViewer <= 1) {
+      return;
+    }
+
+    event.preventDefault();
+    const touch = event.touches[0];
+    this.arrastrandoTouch = true;
+    this.inicioTouchX = touch.clientX - this.posicionXFotoViewer;
+    this.inicioTouchY = touch.clientY - this.posicionYFotoViewer;
+  }
+
+  moverArrastreTouch(event: TouchEvent): void {
+    if (!this.arrastrandoTouch || event.touches.length !== 1) {
+      return;
+    }
+
+    event.preventDefault();
+    const touch = event.touches[0];
+    this.posicionXFotoViewer = touch.clientX - this.inicioTouchX;
+    this.posicionYFotoViewer = touch.clientY - this.inicioTouchY;
+    this.limitarPosicionFoto();
+  }
+
+  terminarArrastreTouch(): void {
+    this.arrastrandoTouch = false;
+  }
+
+  limitarPosicionFoto(): void {
+    if (this.zoomFotoViewer <= 1) {
+      this.posicionXFotoViewer = 0;
+      this.posicionYFotoViewer = 0;
+      return;
+    }
+
+    const contenedor = document.querySelector('.photo-viewer-image-container') as HTMLElement | null;
+    const imagen = document.querySelector('.photo-viewer-image') as HTMLImageElement | null;
+
+    if (!contenedor || !imagen) {
+      return;
+    }
+
+    const limiteX = Math.max(0, (imagen.clientWidth * this.zoomFotoViewer - contenedor.clientWidth) / 2);
+    const limiteY = Math.max(0, (imagen.clientHeight * this.zoomFotoViewer - contenedor.clientHeight) / 2);
+    this.posicionXFotoViewer = Math.max(-limiteX, Math.min(limiteX, this.posicionXFotoViewer));
+    this.posicionYFotoViewer = Math.max(-limiteY, Math.min(limiteY, this.posicionYFotoViewer));
+  }
+
+  imagenViewerCargada(): void {
+    setTimeout(() => this.limitarPosicionFoto());
+  }
+
+  @HostListener('window:resize')
+  ajustarViewerAlCambiarPantalla(): void {
+    if (this.fotoViewerAbierto) {
+      setTimeout(() => this.limitarPosicionFoto());
+    }
   }
 
   selectType(title: string, type: string) {

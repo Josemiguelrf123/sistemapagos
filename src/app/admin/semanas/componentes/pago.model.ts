@@ -1,3 +1,16 @@
+export interface FotoPago {
+  fileId: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  viewUrl: string;
+}
+export interface FotografiasPago {
+  revision: FotoPago[];
+  entrega: FotoPago[];
+}
+
 export class Pago {
   id: string;
   semana: string;
@@ -19,6 +32,7 @@ export class Pago {
   trabajoReferencia: null | Pago;
   partida: string;
   years: number;
+  fotografias: FotografiasPago;
 
   constructor(pago: Pago) {
     {
@@ -42,6 +56,11 @@ export class Pago {
       this.trabajoReferencia = pago.trabajoReferencia || null;
       this.partida = pago.partida || '';
       this.years = pago.years || new Date().getFullYear();
+      // NUEVO
+      this.fotografias = pago.fotografias || {
+        revision: [],
+        entrega: [],
+      };
     }
   }
 }
